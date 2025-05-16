@@ -1,15 +1,21 @@
 #include "Neuron.h"
 
-Neuron::Neuron(double tau_, double threshold, double reset)
-    : V(0.0), V_thresh(threshold), V_reset(reset), tau(tau_), spike(false) {}
+Neuron::Neuron(double a_, double b_, double c_, double d_)
+    : v(-65.0), u(b_ * -65.0), a(a_), b(b_), c(c_), d(d_), spike(false) {}
 
 void Neuron::update(double inputCurrent, double dt) {
-    V += (dt / tau) * (-V + inputCurrent);
-    if (V >= V_thresh) {
-        V = V_reset;
-        spike = true;
-    } else {
-        spike = false;
+    spike = false;
+    for (int i = 0; i < static_cast<int>(1.0 / dt); ++i) {
+        double dv = 0.04 * v * v + 5 * v + 140 - u + inputCurrent;
+        double du = a * (b * v - u);
+        v += dt * dv;
+        u += dt * du;
+
+        if (v >= 30.0) {
+            v = c;
+            u += d;
+            spike = true;
+        }
     }
 }
 
@@ -18,5 +24,5 @@ bool Neuron::fired() const {
 }
 
 double Neuron::getVoltage() const {
-    return V;
+    return v;
 }

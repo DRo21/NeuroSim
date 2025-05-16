@@ -1,9 +1,8 @@
 #include "OpenGLWidget.h"
-#include <QTimer>
 #include <algorithm>
 
 OpenGLWidget::OpenGLWidget(QWidget *parent)
-    : QOpenGLWidget(parent) {
+    : QOpenGLWidget(parent), maxSamples(100) {
     setMinimumSize(800, 600);
 }
 
@@ -18,14 +17,16 @@ void OpenGLWidget::resizeGL(int w, int h) {
 
 void OpenGLWidget::paintGL() {
     glClear(GL_COLOR_BUFFER_BIT);
-
     if (voltageHistory.empty()) return;
 
     glColor3f(0.2f, 1.0f, 0.2f);
     glBegin(GL_LINE_STRIP);
     for (size_t i = 0; i < voltageHistory.size(); ++i) {
-        float x = static_cast<float>(i) / maxSamples * 2.0f - 1.0f;
-        float y = (voltageHistory[i] / 100.0f) * 2.0f - 1.0f;
+        float x = static_cast<float>(i) / (maxSamples - 1) * 2.0f - 1.0f;
+
+        float normalized = (voltageHistory[i] + 80.0f) / 110.0f;
+        float y = normalized * 2.0f - 1.0f;
+
         glVertex2f(x, y);
     }
     glEnd();

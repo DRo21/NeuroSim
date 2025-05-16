@@ -1,5 +1,4 @@
 #include "Simulation.h"
-#include <cmath>
 
 Simulation::Simulation(int neuronCount) {
     for (int i = 0; i < neuronCount; ++i) {
@@ -9,9 +8,16 @@ Simulation::Simulation(int neuronCount) {
 
 void Simulation::step(double dt) {
     for (auto& neuron : m_neurons) {
-        double input = 1.1 + 0.5 * sin(neuron.getVoltage());
-        neuron.update(input, dt);
+        neuron.update(m_inputCurrent, dt);
     }
+}
+
+void Simulation::setInputCurrent(double current) {
+    m_inputCurrent = current;
+}
+
+double Simulation::getInputCurrent() const {
+    return m_inputCurrent;
 }
 
 const std::vector<Neuron>& Simulation::neurons() const {

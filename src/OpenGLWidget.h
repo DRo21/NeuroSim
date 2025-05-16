@@ -6,11 +6,8 @@
 
 class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     Q_OBJECT
-
 public:
-    OpenGLWidget(QWidget *parent = nullptr);
-
-public slots:
+    explicit OpenGLWidget(QWidget *parent = nullptr);
     void addVoltageSample(float voltage);
 
 protected:
@@ -20,5 +17,5 @@ protected:
 
 private:
     std::deque<float> voltageHistory;
-    const size_t maxSamples = 200;
+    const size_t maxSamples;
 };
