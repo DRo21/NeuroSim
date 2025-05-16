@@ -37,7 +37,7 @@ du/dt = a(bv - u)
 ### 💻 Build Steps
 
 ```bash
-git clone https://github.com/yourusername/NeuroSim.git
+git clone https://github.com/DRo21/NeuroSim.git
 cd NeuroSim
 mkdir build && cd build
 cmake .. -DCMAKE_PREFIX_PATH=/path/to/Qt6
