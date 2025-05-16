@@ -1,0 +1,14 @@
+@INCLUDE_PATH = @CMAKE_SOURCE_DIR@
+
+PROJECT_NAME           = "@PROJECT_NAME@"
+PROJECT_NUMBER         = "@PROJECT_VERSION@"
+OUTPUT_DIRECTORY       = "@CMAKE_BINARY_DIR@/docs"
+INPUT                  = @CMAKE_SOURCE_DIR@/src
+FILE_PATTERNS          = *.cpp *.h
+RECURSIVE              = YES
+GENERATE_LATEX         = YES
+GENERATE_HTML          = YES
+HAVE_DOT               = YES
+CALL_GRAPH             = YES
+CALLER_GRAPH           = YES
+CLASS_DIAGRAMS         = YES

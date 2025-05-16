@@ -1,6 +1,11 @@
 #include "MainWindow.h"
 #include <QVBoxLayout>
 
+/**
+ * @brief Constructs the MainWindow UI and sets up connections.
+ * 
+ * @param parent Pointer to the parent QWidget.
+ */
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), simulation(1) {
 
@@ -33,8 +38,14 @@ MainWindow::MainWindow(QWidget *parent)
     simulationRunning = false;
 }
 
+/**
+ * @brief Destructor for MainWindow.
+ */
 MainWindow::~MainWindow() {}
 
+/**
+ * @brief Updates the simulation state and records voltage values.
+ */
 void MainWindow::updateSimulation() {
     if (!simulationRunning) return;
 
@@ -44,6 +55,9 @@ void MainWindow::updateSimulation() {
     openGLWidget->addVoltageSample(voltage);
 }
 
+/**
+ * @brief Parses and handles user commands from the input field.
+ */
 void MainWindow::handleCommand() {
     QString cmd = commandInput->text().trimmed();
     commandInput->clear();
@@ -96,6 +110,12 @@ void MainWindow::handleCommand() {
     }
 }
 
+
+/**
+ * @brief Appends a message to the command output log.
+ * 
+ * @param text The message to be logged.
+ */
 void MainWindow::appendToLog(const QString& text) {
     commandOutput->appendPlainText(text);
 }
