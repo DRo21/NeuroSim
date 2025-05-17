@@ -4,23 +4,26 @@
 #include <QTimer>
 #include <QPlainTextEdit>
 #include <QLineEdit>
+#include <QHBoxLayout>
 #include "OpenGLWidget.h"
+#include "HeatmapWidget.h"
 #include "Simulation.h"
 
 /**
- * @brief The MainWindow class for NeuroSim GUI.
- * 
- * This class manages the main user interface, command handling, and simulation timing.
+ * @class MainWindow
+ * @brief Main application window for the NeuroSim simulator.
+ *
+ * Manages the UI components, simulation timing, and command input/output.
  */
 class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
     /**
-     * @brief Constructor for MainWindow.
+     * @brief Constructs the MainWindow.
      * @param parent Optional parent widget.
      */
-    MainWindow(QWidget *parent = nullptr);
+    explicit MainWindow(QWidget *parent = nullptr);
 
     /**
      * @brief Destructor for MainWindow.
@@ -29,29 +32,29 @@ public:
 
 private slots:
     /**
-     * @brief Updates the simulation periodically.
+     * @brief Slot to update the simulation on timer tick.
      */
     void updateSimulation();
 
     /**
-     * @brief Handles user command input.
+     * @brief Slot to handle user input commands.
      */
     void handleCommand();
 
 private:
     /**
-     * @brief Appends text to the command output field.
-     * 
-     * @param text The string to append.
+     * @brief Appends text to the command output log.
+     * @param text Text to append.
      */
     void appendToLog(const QString& text);
 
-    OpenGLWidget* openGLWidget;    ///< Widget for OpenGL-based neuron activity rendering.
-    Simulation simulation;         ///< The simulation logic handler.
-    QTimer* simTimer;              ///< Timer to trigger simulation updates.
+    OpenGLWidget* openGLWidget;    ///< Widget rendering neuron activity graph.
+    HeatmapWidget* heatmapWidget;  ///< Widget rendering heatmap visualization.
+    Simulation simulation;         ///< Simulation engine instance.
+    QTimer* simTimer;              ///< Timer controlling simulation updates.
 
-    QPlainTextEdit* commandOutput; ///< Output field for logging messages.
-    QLineEdit* commandInput;       ///< Input field for user commands.
+    QPlainTextEdit* commandOutput; ///< Read-only log output area.
+    QLineEdit* commandInput;       ///< Command input field.
 
-    bool simulationRunning = false; ///< Flag indicating whether the simulation is running.
+    bool simulationRunning = false; ///< Flag for simulation state.
 };

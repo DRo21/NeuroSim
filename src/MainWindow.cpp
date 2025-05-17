@@ -1,37 +1,55 @@
 #include "MainWindow.h"
 #include <QVBoxLayout>
+#include <QSpacerItem>
 
 /**
- * @brief Constructs the MainWindow UI and sets up connections.
+ * @brief Constructs the MainWindow UI and connects signals/slots.
  * 
- * @param parent Pointer to the parent QWidget.
+ * Initializes UI elements, layouts, and simulation timer.
+ * @param parent Optional parent widget.
  */
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), simulation(1) {
 
     setWindowTitle("NeuroSim - Neural Activity Simulator");
-    resize(800, 600);
-    showFullScreen();
+    resize(1200, 800);
+    showMaximized();
 
     QWidget *centralWidget = new QWidget(this);
     setCentralWidget(centralWidget);
 
-    QVBoxLayout *layout = new QVBoxLayout(centralWidget);
+    QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
 
     openGLWidget = new OpenGLWidget(this);
-    layout->addWidget(openGLWidget);
+    heatmapWidget = new HeatmapWidget(this);
 
+    // Set minimum sizes for widgets to avoid shrinking too much
+    openGLWidget->setMinimumSize(400, 400);
+    heatmapWidget->setMinimumSize(400, 400);
+
+    // Horizontal layout to hold two panels side-by-side
+    QHBoxLayout *topLayout = new QHBoxLayout();
+    topLayout->addWidget(openGLWidget, 1);
+    topLayout->addSpacing(20);  ///< Adds padding between the two panels
+    topLayout->addWidget(heatmapWidget, 1);
+
+    mainLayout->addLayout(topLayout);
+
+    // Command output log (read-only)
     commandOutput = new QPlainTextEdit(this);
     commandOutput->setReadOnly(true);
     commandOutput->setMaximumHeight(150);
-    layout->addWidget(commandOutput);
+    mainLayout->addWidget(commandOutput);
 
+    // Command input field
     commandInput = new QLineEdit(this);
     commandInput->setPlaceholderText("Enter command...");
-    layout->addWidget(commandInput);
+    mainLayout->addWidget(commandInput);
 
+    // Connect input field return key to command handler
     connect(commandInput, &QLineEdit::returnPressed, this, &MainWindow::handleCommand);
 
+    // Timer for periodic simulation updates
     simTimer = new QTimer(this);
     connect(simTimer, &QTimer::timeout, this, &MainWindow::updateSimulation);
 
@@ -44,19 +62,31 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow() {}
 
 /**
- * @brief Updates the simulation state and records voltage values.
+ * @brief Updates the simulation and refreshes UI components.
+ *
+ * Steps the simulation forward, updates the voltage graph and heatmap.
  */
 void MainWindow::updateSimulation() {
     if (!simulationRunning) return;
 
     simulation.step(0.1);
 
+    // Add neuron voltage to graph
     float voltage = simulation.neurons().at(0).getVoltage();
     openGLWidget->addVoltageSample(voltage);
+
+    // Generate dummy heatmap data for demonstration
+    std::vector<float> dummy(100 * 100);
+    for (int i = 0; i < dummy.size(); ++i)
+        dummy[i] = std::sin(i * 0.01f) * 0.5f + 0.5f;
+
+    heatmapWidget->setHeatmapData(dummy, 100, 100);
 }
 
 /**
- * @brief Parses and handles user commands from the input field.
+ * @brief Parses and executes user commands entered in the input field.
+ *
+ * Supports commands such as start, stop, set current, status, and help.
  */
 void MainWindow::handleCommand() {
     QString cmd = commandInput->text().trimmed();
@@ -70,8 +100,7 @@ void MainWindow::handleCommand() {
         } else {
             appendToLog("Simulation already running.");
         }
-    }
-    else if (cmd == "stop") {
+    } else if (cmd == "stop") {
         if (simulationRunning) {
             simulationRunning = false;
             simTimer->stop();
@@ -79,8 +108,7 @@ void MainWindow::handleCommand() {
         } else {
             appendToLog("Simulation already stopped.");
         }
-    }
-    else if (cmd.startsWith("set current ")) {
+    } else if (cmd.startsWith("set current ")) {
         bool ok = false;
         double val = cmd.mid(QString("set current ").length()).toDouble(&ok);
         if (ok) {
@@ -89,32 +117,27 @@ void MainWindow::handleCommand() {
         } else {
             appendToLog("Invalid current value.");
         }
-    }
-    else if (cmd == "status") {
+    } else if (cmd == "status") {
         QString status = QString("Simulation running: %1\nNeuron count: %2\nInput current: %3")
             .arg(simulationRunning ? "Yes" : "No")
             .arg(simulation.neurons().size())
             .arg(simulation.getInputCurrent());
         appendToLog(status);
-    }
-    else if (cmd == "help") {
+    } else if (cmd == "help") {
         appendToLog("Available commands:\n"
                     "start - Start simulation\n"
                     "stop - Stop simulation\n"
                     "set current <value> - Set input current\n"
                     "status - Show simulation status\n"
                     "help - Show this help");
-    }
-    else {
+    } else {
         appendToLog("Unknown command. Type 'help' for list.");
     }
 }
 
-
 /**
- * @brief Appends a message to the command output log.
- * 
- * @param text The message to be logged.
+ * @brief Appends text to the command output log window.
+ * @param text The message to append.
  */
 void MainWindow::appendToLog(const QString& text) {
     commandOutput->appendPlainText(text);
