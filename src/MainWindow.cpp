@@ -9,7 +9,7 @@
  * @param parent Optional parent widget.
  */
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent), simulation(1) {
+    : QMainWindow(parent), simulation(100 * 100) {
 
     setWindowTitle("NeuroSim - Neural Activity Simulator");
     resize(1200, 800);
@@ -71,16 +71,15 @@ void MainWindow::updateSimulation() {
 
     simulation.step(0.1);
 
-    // Add neuron voltage to graph
+    // Update voltage plot from first neuron
     float voltage = simulation.neurons().at(0).getVoltage();
     openGLWidget->addVoltageSample(voltage);
 
-    // Generate dummy heatmap data for demonstration
-    std::vector<float> dummy(100 * 100);
-    for (int i = 0; i < dummy.size(); ++i)
-        dummy[i] = std::sin(i * 0.01f) * 0.5f + 0.5f;
-
-    heatmapWidget->setHeatmapData(dummy, 100, 100);
+    // Update heatmap using real neuron data
+    const int heatmapWidth = 100;
+    const int heatmapHeight = 100;
+    std::vector<float> voltageGrid = simulation.getVoltageGrid(heatmapWidth, heatmapHeight);
+    heatmapWidget->setHeatmapData(voltageGrid, heatmapWidth, heatmapHeight);
 }
 
 /**
