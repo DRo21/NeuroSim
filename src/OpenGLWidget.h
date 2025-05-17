@@ -2,12 +2,14 @@
 
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
-#include <deque>
+#include <QVector>
+#include <QTimer>
 
 /**
- * @brief A custom OpenGL widget for visualizing neuron membrane voltage over time.
- * 
- * This widget plots the voltage values on a real-time line graph.
+ * @class OpenGLWidget
+ * @brief Displays a real-time voltage trace plot using OpenGL.
+ *
+ * This widget renders the voltage of a selected neuron over time.
  */
 class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     Q_OBJECT
@@ -15,40 +17,43 @@ class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
 public:
     /**
      * @brief Constructs the OpenGLWidget.
-     * 
      * @param parent Optional parent widget.
      */
-    explicit OpenGLWidget(QWidget *parent = nullptr);
+    explicit OpenGLWidget(QWidget* parent = nullptr);
 
     /**
-     * @brief Adds a new voltage sample to the history buffer.
-     * 
-     * Triggers a repaint to display the updated graph.
-     * 
-     * @param voltage Membrane voltage value.
+     * @brief Destructor.
+     */
+    ~OpenGLWidget() override;
+
+    /**
+     * @brief Adds a new voltage sample to the plot.
+     * @param voltage The voltage value to add.
      */
     void addVoltageSample(float voltage);
 
 protected:
     /**
-     * @brief Initializes OpenGL context and settings.
+     * @brief Initializes OpenGL state and resources.
      */
     void initializeGL() override;
 
     /**
-     * @brief Handles OpenGL viewport resizing.
-     * 
+     * @brief Handles widget resizing events.
      * @param w New width.
      * @param h New height.
      */
     void resizeGL(int w, int h) override;
 
     /**
-     * @brief Renders the voltage line graph.
+     * @brief Renders the voltage trace plot.
      */
     void paintGL() override;
 
 private:
-    std::deque<float> voltageHistory; ///< Circular buffer of voltage samples.
-    const size_t maxSamples;          ///< Maximum number of samples to keep.
+    QVector<float> voltageSamples; ///< Buffer storing recent voltage samples.
+    int maxSamples = 1000;         ///< Maximum number of samples to display.
+
+    float minVoltage = -80.0f;     ///< Minimum voltage expected (for scaling).
+    float maxVoltage = 50.0f;      ///< Maximum voltage expected (for scaling).
 };

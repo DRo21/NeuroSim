@@ -6,6 +6,9 @@
 /**
  * @class Simulation
  * @brief Manages a population of neurons and their simulation state.
+ *
+ * Handles updating of all neurons, applying input current, and accessing voltage
+ * data for visualization. Also tracks a selected neuron for focused analysis.
  */
 class Simulation {
 public:
@@ -47,7 +50,24 @@ public:
      */
     std::vector<float> getVoltageGrid(int width, int height) const;
 
+    /**
+     * @brief Sets the index of the currently selected neuron.
+     * 
+     * This neuron is used for focused visualization (e.g. voltage plotting).
+     * If the index is out of bounds, it is clamped to the nearest valid index.
+     *
+     * @param index Index of the neuron to select.
+     */
+    void setSelectedNeuron(int index);
+
+    /**
+     * @brief Returns the index of the currently selected neuron.
+     * @return int Selected neuron index.
+     */
+    int getSelectedNeuron() const;
+
 private:
     std::vector<Neuron> m_neurons;  ///< Vector of neurons in the simulation.
     double m_inputCurrent = 10.0;   ///< Input current applied to each neuron.
+    int m_selectedNeuron = 0;       ///< Currently selected neuron for detailed plotting.
 };

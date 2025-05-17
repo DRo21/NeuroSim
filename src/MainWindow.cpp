@@ -64,14 +64,16 @@ MainWindow::~MainWindow() {}
 /**
  * @brief Updates the simulation and refreshes UI components.
  *
- * Steps the simulation forward, updates the voltage graph and heatmap.
+ * Steps the simulation forward by a fixed time step,
+ * updates the voltage graph from the selected neuron,
+ * and updates the heatmap visualization.
  */
 void MainWindow::updateSimulation() {
     if (!simulationRunning) return;
 
     simulation.step(0.1);
 
-    // Update voltage plot from first neuron
+    // Update voltage plot from first neuron (index 0)
     float voltage = simulation.neurons().at(0).getVoltage();
     openGLWidget->addVoltageSample(voltage);
 
@@ -85,7 +87,12 @@ void MainWindow::updateSimulation() {
 /**
  * @brief Parses and executes user commands entered in the input field.
  *
- * Supports commands such as start, stop, set current, status, and help.
+ * Supported commands include:
+ * - start: Starts the simulation timer.
+ * - stop: Stops the simulation timer.
+ * - set current <value>: Sets the input current to neurons.
+ * - status: Prints current simulation status.
+ * - help: Shows available commands.
  */
 void MainWindow::handleCommand() {
     QString cmd = commandInput->text().trimmed();
@@ -135,8 +142,8 @@ void MainWindow::handleCommand() {
 }
 
 /**
- * @brief Appends text to the command output log window.
- * @param text The message to append.
+ * @brief Appends a message line to the command output log widget.
+ * @param text The message text to append.
  */
 void MainWindow::appendToLog(const QString& text) {
     commandOutput->appendPlainText(text);
