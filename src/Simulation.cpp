@@ -1,13 +1,26 @@
 #include <algorithm>
+#include <random>
 #include "Simulation.h"
 
 /**
- * @brief Initializes the simulation with a given number of default neurons.
+ * @brief Initializes the simulation with a given number of diverse neurons.
  */
 Simulation::Simulation(int neuronCount) {
     m_neurons.reserve(neuronCount);
+
+    std::default_random_engine rng(std::random_device{}());
+    std::uniform_real_distribution<double> noiseA(-0.005, 0.005);
+    std::uniform_real_distribution<double> noiseB(-0.01, 0.01);
+    std::uniform_real_distribution<double> noiseC(-5.0, 5.0);
+    std::uniform_real_distribution<double> noiseD(-2.0, 2.0);
+
     for (int i = 0; i < neuronCount; ++i) {
-        m_neurons.emplace_back();
+        double a = 0.02 + noiseA(rng);   // typical a: 0.02
+        double b = 0.2 + noiseB(rng);    // typical b: 0.2
+        double c = -65.0 + noiseC(rng);  // typical c: -65
+        double d = 8.0 + noiseD(rng);    // typical d: 8
+
+        m_neurons.emplace_back(a, b, c, d);
     }
 }
 
