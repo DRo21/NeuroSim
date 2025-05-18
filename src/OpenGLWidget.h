@@ -3,52 +3,66 @@
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
 #include <deque>
+#include <QVector>
 
 /**
- * @brief A custom OpenGL widget for visualizing neuron membrane voltage over time.
- * 
- * This widget plots the voltage values on a real-time line graph.
+ * @class OpenGLWidget
+ * @brief Renders a real-time voltage trace (line plot) using OpenGL + QPainter.
+ *
+ * Maintains a circular buffer of the most recent voltage samples (up to maxSamples).
+ * Each call to addVoltageSample() pushes a new value; paintGL() draws the line.
  */
 class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     Q_OBJECT
 
 public:
     /**
-     * @brief Constructs the OpenGLWidget.
-     * 
+     * @brief Constructs the OpenGLWidget and preallocates storage.
      * @param parent Optional parent widget.
      */
-    explicit OpenGLWidget(QWidget *parent = nullptr);
+    explicit OpenGLWidget(QWidget* parent = nullptr);
 
     /**
-     * @brief Adds a new voltage sample to the history buffer.
-     * 
-     * Triggers a repaint to display the updated graph.
-     * 
-     * @param voltage Membrane voltage value.
+     * @brief Destructor.
+     */
+    ~OpenGLWidget() override;
+
+    /**
+     * @brief Adds a new voltage sample to the buffer and requests a repaint.
+     * @param voltage Value (e.g., in mV) to append to the trace.
      */
     void addVoltageSample(float voltage);
 
+    /**
+     * @brief Clears all stored voltage samples, effectively resetting the trace.
+     */
+    void clearVoltageTrace();
+
 protected:
     /**
-     * @brief Initializes OpenGL context and settings.
+     * @brief Initializes OpenGL functions and state (once).
      */
     void initializeGL() override;
 
     /**
-     * @brief Handles OpenGL viewport resizing.
-     * 
-     * @param w New width.
-     * @param h New height.
+     * @brief Updates OpenGL viewport on widget resize.
+     * @param w New width (pixels).
+     * @param h New height (pixels).
      */
     void resizeGL(int w, int h) override;
 
     /**
-     * @brief Renders the voltage line graph.
+     * @brief Renders the voltage trace as a green polyline on a black background.
+     *
+     * Uses QPainter on top of the cleared OpenGL buffer for anti-aliased lines.
      */
     void paintGL() override;
 
 private:
-    std::deque<float> voltageHistory; ///< Circular buffer of voltage samples.
-    const size_t maxSamples;          ///< Maximum number of samples to keep.
+    std::deque<float> voltageSamples; ///< Circular buffer of recent samples.
+    const int maxSamples = 500;       ///< Maximum number of samples to keep.
+
+    // Voltage range for normalization (-80 mV to +50 mV)
+    const float minVoltage = -80.0f;
+    const float maxVoltage =  50.0f;
 };

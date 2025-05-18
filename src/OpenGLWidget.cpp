@@ -1,58 +1,93 @@
 #include "OpenGLWidget.h"
-#include <algorithm>
+#include <QPainter>
 
 /**
- * @brief Constructor for OpenGLWidget.
- * 
- * Sets default size and maximum number of voltage samples.
+ * @brief Constructs the OpenGLWidget, reserving space in the deque.
+ * @param parent Optional parent widget.
  */
-OpenGLWidget::OpenGLWidget(QWidget *parent)
-    : QOpenGLWidget(parent), maxSamples(100) {
-    setMinimumSize(800, 600);
+OpenGLWidget::OpenGLWidget(QWidget* parent)
+    : QOpenGLWidget(parent)
+{
+    voltageSamples.clear();
 }
 
 /**
- * @brief Initializes OpenGL rendering context and settings.
+ * @brief Default destructor.
+ */
+OpenGLWidget::~OpenGLWidget() = default;
+
+/**
+ * @brief Adds a new voltage sample to the circular buffer and requests repaint.
+ * @param voltage The new voltage value to append.
+ */
+void OpenGLWidget::addVoltageSample(float voltage) {
+    if (voltageSamples.size() >= static_cast<size_t>(maxSamples)) {
+        voltageSamples.pop_front();
+    }
+    voltageSamples.push_back(voltage);
+    update();
+}
+
+/**
+ * @brief Clears all stored voltage samples, effectively resetting the trace.
+ */
+void OpenGLWidget::clearVoltageTrace() {
+    voltageSamples.clear();
+    update();
+}
+
+/**
+ * @brief One-time OpenGL initialization.
  */
 void OpenGLWidget::initializeGL() {
     initializeOpenGLFunctions();
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f); // Dark gray background
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 /**
- * @brief Adjusts the OpenGL viewport when the widget is resized.
+ * @brief Adjusts OpenGL viewport whenever the widget is resized.
+ * @param w New width in pixels.
+ * @param h New height in pixels.
  */
 void OpenGLWidget::resizeGL(int w, int h) {
     glViewport(0, 0, w, h);
 }
 
 /**
- * @brief Renders the voltage history as a 2D line graph.
+ * @brief Renders the voltage trace by drawing a polyline of samples.
+ *
+ * - Clears the OpenGL buffer.
+ * - Uses QPainter with anti-aliasing to draw a green line from left to right.
+ * - Normalizes each voltage sample into [0,1], then maps to screen-Y in [0,h].
  */
 void OpenGLWidget::paintGL() {
     glClear(GL_COLOR_BUFFER_BIT);
-    if (voltageHistory.empty()) return;
 
-    glColor3f(0.2f, 1.0f, 0.2f); // Green line
-    glBegin(GL_LINE_STRIP);
-    for (size_t i = 0; i < voltageHistory.size(); ++i) {
-        float x = static_cast<float>(i) / (maxSamples - 1) * 2.0f - 1.0f;
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setPen(Qt::green);
 
-        // Normalize voltage from [-80, 30] to [-1, 1]
-        float normalized = (voltageHistory[i] + 80.0f) / 110.0f;
-        float y = normalized * 2.0f - 1.0f;
-
-        glVertex2f(x, y);
+    int w = width();
+    int h = height();
+    if (voltageSamples.empty()) {
+        return;
     }
-    glEnd();
-}
 
-/**
- * @brief Adds a voltage value to the buffer and triggers a repaint.
- */
-void OpenGLWidget::addVoltageSample(float voltage) {
-    if (voltageHistory.size() >= maxSamples)
-        voltageHistory.pop_front();
-    voltageHistory.push_back(voltage);
-    update();
+    const int sampleCount = static_cast<int>(voltageSamples.size());
+    float xStep = static_cast<float>(w) / (maxSamples - 1);
+
+    // Compute first point
+    float firstVal = (voltageSamples.front() - minVoltage) / (maxVoltage - minVoltage);
+    firstVal = std::clamp(firstVal, 0.0f, 1.0f);
+    QPointF lastPoint(0.0f, h - firstVal * h);
+
+    for (int i = 1; i < sampleCount; ++i) {
+        float normalized = (voltageSamples[i] - minVoltage) / (maxVoltage - minVoltage);
+        normalized = std::clamp(normalized, 0.0f, 1.0f);
+        float x = i * xStep;
+        float y = h - normalized * h;
+        QPointF currentPoint(x, y);
+        painter.drawLine(lastPoint, currentPoint);
+        lastPoint = currentPoint;
+    }
 }
