@@ -10,7 +10,9 @@ set(CMAKE_AUTOUIC ON)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-# Qt6 packages
+# -------------------------
+# Qt6 Packages
+# -------------------------
 find_package(Qt6 REQUIRED COMPONENTS
     Core
     Widgets
@@ -18,7 +20,26 @@ find_package(Qt6 REQUIRED COMPONENTS
     OpenGLWidgets
 )
 
-# Source files
+# -------------------------
+# Python & pybind11 for Python API
+# -------------------------
+find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
+
+# pybind11 as submodule
+add_subdirectory(extern/pybind11)
+
+# -------------------------
+# Include paths
+# -------------------------
+include_directories(
+    ${PROJECT_SOURCE_DIR}/src
+    ${PROJECT_SOURCE_DIR}/include
+    ${Python3_INCLUDE_DIRS}
+)
+
+# -------------------------
+# Main Qt Application
+# -------------------------
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
     src/*.cpp
     src/*.h
@@ -26,18 +47,34 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
 
 add_executable(NeuroSim ${SOURCES})
 
-# Link Qt modules
 target_link_libraries(NeuroSim PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
     Qt6::OpenGLWidgets
+    Python3::Python
 )
 
-# Include path
-target_include_directories(NeuroSim PRIVATE
+# -------------------------
+# Python Module (bindings)
+# -------------------------
+pybind11_add_module(neurosim
+    src/bindings.cpp
+    src/Simulation.cpp
+    src/Neuron.cpp
+)
+
+target_include_directories(neurosim PRIVATE
     ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/include
+    ${Python3_INCLUDE_DIRS}
+)
+
+target_link_libraries(neurosim PRIVATE
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Widgets
+    Qt6::OpenGLWidgets
 )
 
 # -------------------------
