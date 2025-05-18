@@ -19,12 +19,7 @@
 
 This simulator implements the Izhikevich spiking model, known for combining biological realism with computational efficiency:
 
-\[
-\begin{aligned}
-\frac{dv}{dt} &= 0.04\,v^2 + 5\,v + 140 - u + I, \\
-\frac{du}{dt} &= a\,(b\,v - u).
-\end{aligned}
-\]
+dv/dt = 0.04v² + 5v + 140 - u + I du/dt = a(bv - u)
 
 - Parameters:  
   - \(a = 0.02\)  
