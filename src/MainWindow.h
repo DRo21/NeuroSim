@@ -8,12 +8,15 @@
 #include "OpenGLWidget.h"
 #include "HeatmapWidget.h"
 #include "Simulation.h"
+#include "Constants.h"
 
 /**
  * @class MainWindow
  * @brief Main application window for the NeuroSim neural activity simulator.
  *
  * Manages the UI components, simulation timer, and command input/output.
+ * Displays a voltage trace (left) and a heatmap of all neurons (right),
+ * plus a console-style command input at the bottom.
  */
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -32,35 +35,41 @@ public:
 
 private slots:
     /**
-     * @brief Timer slot that updates the simulation step and UI.
+     * @brief Timer slot that advances simulation and updates UI.
      *
-     * Advances simulation by one step, updates voltage plot and heatmap.
+     * - Calls Simulation::step(Constants::SimulationTimeStep)
+     * - Updates the voltage trace from the selected neuron (index 0 by default)
+     * - Regenerates and displays a small 3×3 heatmap of all neurons
      */
     void updateSimulation();
 
     /**
-     * @brief Handles commands entered by the user.
+     * @brief Processes a command string entered by the user.
      *
-     * Supports commands like start, stop, set current, status, and help.
+     * Supported commands:
+     *   - start                  : starts the simulation loop
+     *   - stop                   : stops the simulation loop
+     *   - set current <value>    : sets the input current for all neurons
+     *   - select neuron <index>  : selects neuron for voltage trace
+     *   - status                 : prints current simulation state
+     *   - help                   : shows list of available commands
      */
     void handleCommand();
 
 private:
     /**
-     * @brief Appends text to the command output log.
-     * @param text Message string to append.
+     * @brief Appends a line of text to the command output log (read-only widget).
+     * @param text The message to append.
      */
     void appendToLog(const QString& text);
 
-    OpenGLWidget* openGLWidget;    ///< Widget showing the voltage trace graph.
-    HeatmapWidget* heatmapWidget;  ///< Widget showing the neuron heatmap.
+    OpenGLWidget* openGLWidget;    ///< Widget for rendering a single-neuron voltage trace.
+    HeatmapWidget* heatmapWidget;  ///< Widget for rendering the 3×3 heatmap.
+    Simulation simulation;         ///< Simulation engine (manages all neurons).
+    QTimer* simTimer;              ///< Timer that fires every SimulationIntervalMs.
+    QPlainTextEdit* commandOutput; ///< Read-only text area for log messages.
+    QLineEdit* commandInput;       ///< Single-line input field for commands.
+    bool simulationRunning = false;///< Flag indicating whether the simulation is active.
 
-    Simulation simulation;         ///< Simulation engine instance.
-
-    QTimer* simTimer;              ///< Timer controlling simulation updates.
-
-    QPlainTextEdit* commandOutput; ///< Read-only text area for command output.
-    QLineEdit* commandInput;       ///< Input field for user commands.
-
-    bool simulationRunning = false; ///< Flag to indicate if simulation is running.
+    int selectedNeuron;            ///< Currently selected neuron index for voltage trace display.
 };

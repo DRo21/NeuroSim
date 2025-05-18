@@ -9,7 +9,7 @@
 - ✅ **Biologically accurate spiking neurons** using the **Izhikevich model**  
 - 🎨 **Real-time membrane voltage plotting** via **OpenGL**  
 - 🔥 **3 × 3 heatmap** showing normalized voltages of nine neurons  
-- 💬 **Command-line control interface** (`start`, `stop`, `set current <val>`)  
+- 💬 **Command-line control interface** (`start`, `stop`, `set current <val>`, `select neuron <index>`)
 - 🧰 Built with **CMake**, **Qt 6**, and **C++20**  
 - 🖼️ Fullscreen **Qt GUI** with clean layout  
 

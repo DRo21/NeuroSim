@@ -19,7 +19,7 @@ void HeatmapWidget::setHeatmapData(const std::vector<float>& data, int width, in
     m_data   = data;
     m_width  = width;
     m_height = height;
-    update();  // schedule a paintGL() call
+    update();
 }
 
 /**

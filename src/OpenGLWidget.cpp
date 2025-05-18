@@ -25,15 +25,23 @@ void OpenGLWidget::addVoltageSample(float voltage) {
         voltageSamples.pop_front();
     }
     voltageSamples.push_back(voltage);
-    update();  // trigger a paintGL() call
+    update();
 }
 
 /**
- * @brief One‐time OpenGL initialization.
+ * @brief Clears all stored voltage samples, effectively resetting the trace.
+ */
+void OpenGLWidget::clearVoltageTrace() {
+    voltageSamples.clear();
+    update();
+}
+
+/**
+ * @brief One-time OpenGL initialization.
  */
 void OpenGLWidget::initializeGL() {
     initializeOpenGLFunctions();
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);  // Black background
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 /**
@@ -49,8 +57,8 @@ void OpenGLWidget::resizeGL(int w, int h) {
  * @brief Renders the voltage trace by drawing a polyline of samples.
  *
  * - Clears the OpenGL buffer.
- * - Uses QPainter with anti‐aliasing to draw a green line from left to right.
- * - Normalizes each voltage sample into [0,1], then maps to screen‐Y in [0,h].
+ * - Uses QPainter with anti-aliasing to draw a green line from left to right.
+ * - Normalizes each voltage sample into [0,1], then maps to screen-Y in [0,h].
  */
 void OpenGLWidget::paintGL() {
     glClear(GL_COLOR_BUFFER_BIT);
