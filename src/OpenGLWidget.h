@@ -2,21 +2,22 @@
 
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
+#include <deque>
 #include <QVector>
-#include <QTimer>
 
 /**
  * @class OpenGLWidget
- * @brief Displays a real-time voltage trace plot using OpenGL.
+ * @brief Renders a real‐time voltage trace (line plot) using OpenGL + QPainter.
  *
- * This widget renders the voltage of a selected neuron over time.
+ * Maintains a circular buffer of the most recent voltage samples (up to maxSamples).
+ * Each call to addVoltageSample() pushes a new value; paintGL() draws the line.
  */
 class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     Q_OBJECT
 
 public:
     /**
-     * @brief Constructs the OpenGLWidget.
+     * @brief Constructs the OpenGLWidget and preallocates storage.
      * @param parent Optional parent widget.
      */
     explicit OpenGLWidget(QWidget* parent = nullptr);
@@ -27,33 +28,36 @@ public:
     ~OpenGLWidget() override;
 
     /**
-     * @brief Adds a new voltage sample to the plot.
-     * @param voltage The voltage value to add.
+     * @brief Adds a new voltage sample to the buffer and requests a repaint.
+     * @param voltage Value (e.g., in mV) to append to the trace.
      */
     void addVoltageSample(float voltage);
 
 protected:
     /**
-     * @brief Initializes OpenGL state and resources.
+     * @brief Initializes OpenGL functions and state (once).
      */
     void initializeGL() override;
 
     /**
-     * @brief Handles widget resizing events.
-     * @param w New width.
-     * @param h New height.
+     * @brief Updates OpenGL viewport on widget resize.
+     * @param w New width (pixels).
+     * @param h New height (pixels).
      */
     void resizeGL(int w, int h) override;
 
     /**
-     * @brief Renders the voltage trace plot.
+     * @brief Renders the voltage trace as a green polyline on a black background.
+     *
+     * Uses QPainter on top of the cleared OpenGL buffer for anti‐aliased lines.
      */
     void paintGL() override;
 
 private:
-    QVector<float> voltageSamples; ///< Buffer storing recent voltage samples.
-    int maxSamples = 1000;         ///< Maximum number of samples to display.
+    std::deque<float> voltageSamples; ///< Circular buffer of recent samples.
+    const int maxSamples = 500;       ///< Maximum number of samples to keep.
 
-    float minVoltage = -80.0f;     ///< Minimum voltage expected (for scaling).
-    float maxVoltage = 50.0f;      ///< Maximum voltage expected (for scaling).
+    // Voltage range for normalization (−80 mV to +50 mV)
+    const float minVoltage = -80.0f;
+    const float maxVoltage =  50.0f;
 };
