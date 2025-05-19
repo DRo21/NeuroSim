@@ -62,6 +62,7 @@ pybind11_add_module(neurosim
     src/bindings.cpp
     src/Simulation.cpp
     src/Neuron.cpp
+    src/Synapse.cpp
 )
 
 target_include_directories(neurosim PRIVATE

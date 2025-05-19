@@ -1,33 +1,33 @@
 /**
  * @file bindings.cpp
- * @brief Python bindings for the NeuroSim simulation and neuron model using pybind11.
+ * @brief Python bindings for the NeuroSim simulation, neurons, and synapses using pybind11.
  *
- * This module exposes the core C++ classes `Neuron` and `Simulation` to Python for
- * data science, analysis, and visualization workflows using Jupyter and matplotlib.
+ * This module exposes the core C++ classes:
+ *   - Neuron: Single Izhikevich neuron
+ *   - Synapse: Connection between neurons
+ *   - Simulation: Manages a network of neurons and their interactions
  */
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "Simulation.h"
 #include "Neuron.h"
+#include "Synapse.h"
+#include "Simulation.h"
 
 namespace py = pybind11;
 
 /**
  * @brief Python module definition for `neurosim`.
  *
- * Exposes the C++ classes:
- *   - `Neuron`: Single Izhikevich neuron
- *   - `Simulation`: Manages a population of neurons
+ * This module allows Python users to simulate spiking neural networks with custom
+ * neuron models and synaptic connections.
  *
  * @param m Python module object for `neurosim`
  */
 PYBIND11_MODULE(neurosim, m) {
-    m.doc() = "Python bindings for neuron simulation using pybind11";
+    m.doc() = "Python bindings for spiking neuron simulation using pybind11";
 
-    /**
-     * @brief Bind the Neuron class.
-     */
+    // Bind Neuron class
     py::class_<Neuron>(m, "Neuron")
         .def(py::init<double, double, double, double>(),
              py::arg("a") = 0.02, py::arg("b") = 0.2,
@@ -39,11 +39,27 @@ PYBIND11_MODULE(neurosim, m) {
         .def("fired", &Neuron::fired,
              "Check whether the neuron fired during the last update.")
         .def("get_voltage", &Neuron::getVoltage,
-             "Get the current membrane voltage of the neuron.");
+             "Get the current membrane voltage of the neuron.")
+        .def("receive_synaptic_input", &Neuron::receiveSynapticInput,
+             py::arg("current"),
+             "Buffer synaptic input current to be applied on the next update.");
 
-    /**
-     * @brief Bind the Simulation class.
-     */
+    // Bind Synapse class
+    py::class_<Synapse>(m, "Synapse")
+        .def(py::init<int, int, double>(),
+             py::arg("source"), py::arg("target"), py::arg("weight"),
+             "Create a synapse between source and target neuron indices with a specified weight.")
+        .def("get_source", &Synapse::getSourceIndex,
+             "Get the source (presynaptic) neuron index.")
+        .def("get_target", &Synapse::getTargetIndex,
+             "Get the target (postsynaptic) neuron index.")
+        .def("get_weight", &Synapse::getWeight,
+             "Get the current synaptic weight.")
+        .def("set_weight", &Synapse::setWeight,
+             py::arg("weight"),
+             "Set a new synaptic weight.");
+
+    // Bind Simulation class
     py::class_<Simulation>(m, "Simulation")
         .def(py::init<int>(), py::arg("neuronCount"),
              "Construct a simulation with the given number of neurons.")
@@ -65,5 +81,10 @@ PYBIND11_MODULE(neurosim, m) {
              py::arg("index"),
              "Select a neuron for detailed tracking or plotting.")
         .def("get_selected_neuron", &Simulation::getSelectedNeuron,
-             "Return the index of the currently selected neuron.");
+             "Return the index of the currently selected neuron.")
+        .def("add_synapse", &Simulation::addSynapse,
+             py::arg("source"), py::arg("target"), py::arg("weight"),
+             "Add a synaptic connection from source to target with specified weight.")
+        .def("clear_synapses", &Simulation::clearSynapses,
+             "Remove all existing synaptic connections.");
 }

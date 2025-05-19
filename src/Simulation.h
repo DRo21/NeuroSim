@@ -2,6 +2,7 @@
 
 #include <vector>
 #include "Neuron.h"
+#include "Synapse.h"
 
 /**
  * @class Simulation
@@ -71,8 +72,22 @@ public:
      */
     int getSelectedNeuron() const;
 
+    /**
+    * @brief Adds a synapse between two neurons.
+    * @param source Index of source neuron.
+    * @param target Index of target neuron.
+    * @param weight Strength of the connection.
+    */
+    void addSynapse(int source, int target, double weight);
+
+    /**
+    * @brief Clears all synaptic connections.
+    */
+    void clearSynapses();
+
 private:
     std::vector<Neuron> m_neurons;   ///< Underlying vector of all neuron instances.
     double m_inputCurrent = 0.0;     ///< Input current applied to every neuron each step.
     int m_selectedNeuron = 0;        ///< Index of neuron selected for detailed trace.
+    std::vector<Synapse> m_synapses; ///< List of all synaptic connections
 };
