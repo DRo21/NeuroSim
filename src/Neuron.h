@@ -38,10 +38,17 @@ public:
      */
     double getVoltage() const;
 
+    /**
+    * @brief Applies incoming synaptic current to the neuron.
+    * @param current The synaptic current to apply.
+    */
+    void receiveSynapticInput(double current);
+
 private:
     double v;       ///< Membrane potential (voltage).
     double u;       ///< Recovery variable.
     double a, b;    ///< Neuron model parameters.
     double c, d;    ///< Reset values after spike.
     bool spike;     ///< Indicates whether the neuron fired.
+    double synapticInput; ///< Accumulated synaptic current to be applied during update.
 };
