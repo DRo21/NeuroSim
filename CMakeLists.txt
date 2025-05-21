@@ -1,81 +1,96 @@
 cmake_minimum_required(VERSION 3.16)
 project(NeuroSim VERSION 0.1 LANGUAGES CXX)
 
+# C++ standard
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Enable automatic Qt processing
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-
 # -------------------------
-# Qt6 Packages
+# Find dependencies
 # -------------------------
 find_package(Qt6 REQUIRED COMPONENTS
-    Core
     Widgets
-    Gui
     OpenGLWidgets
 )
 
-# -------------------------
-# Python & pybind11 for Python API
-# -------------------------
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 
 # pybind11 as submodule
 add_subdirectory(extern/pybind11)
 
 # -------------------------
-# Include paths
+# Core simulation library
 # -------------------------
-include_directories(
-    ${PROJECT_SOURCE_DIR}/src
-    ${PROJECT_SOURCE_DIR}/include
-    ${Python3_INCLUDE_DIRS}
+add_library(neuro_core
+    src/IntegrateAndFireNeuron.cpp
+    src/Synapse.cpp
+    src/Simulation.cpp
+)
+
+# Ensure position independent code for linking into shared libraries
+set_target_properties(neuro_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+# Public include directories for any consumer
+target_include_directories(neuro_core
+    PUBLIC
+        ${PROJECT_SOURCE_DIR}/src
+)
+
+# -------------------------
+# GUI + visualization library
+# -------------------------
+add_library(neuro_gui
+    src/ControlPanelWidget.cpp
+    src/HeatmapWidget.cpp
+    src/MainWindow.cpp
+    src/RasterPlotWidget.cpp
+    src/TraceViewWidget.cpp
+)
+
+target_include_directories(neuro_gui
+    PUBLIC
+        ${PROJECT_SOURCE_DIR}/src
+)
+
+target_link_libraries(neuro_gui
+    PUBLIC
+        Qt6::Widgets
+        Qt6::OpenGLWidgets
+        neuro_core
 )
 
 # -------------------------
 # Main Qt Application
 # -------------------------
-file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
-    src/*.cpp
-    src/*.h
+add_executable(NeuroSim
+    src/main.cpp
 )
 
-add_executable(NeuroSim ${SOURCES})
-
-target_link_libraries(NeuroSim PRIVATE
-    Qt6::Core
-    Qt6::Gui
-    Qt6::Widgets
-    Qt6::OpenGLWidgets
-    Python3::Python
+target_link_libraries(NeuroSim
+    PRIVATE
+        neuro_gui
 )
 
 # -------------------------
-# Python Module (bindings)
+# Python Module (pybind11)
 # -------------------------
 pybind11_add_module(neurosim
     src/bindings.cpp
-    src/Simulation.cpp
-    src/Neuron.cpp
-    src/Synapse.cpp
 )
 
-target_include_directories(neurosim PRIVATE
-    ${PROJECT_SOURCE_DIR}/src
-    ${PROJECT_SOURCE_DIR}/include
-    ${Python3_INCLUDE_DIRS}
+target_include_directories(neurosim
+    PRIVATE
+        ${PROJECT_SOURCE_DIR}/src
 )
 
-target_link_libraries(neurosim PRIVATE
-    Qt6::Core
-    Qt6::Gui
-    Qt6::Widgets
-    Qt6::OpenGLWidgets
+target_link_libraries(neurosim
+    PRIVATE
+        neuro_core
 )
 
 # -------------------------
@@ -96,5 +111,5 @@ if (DOXYGEN_FOUND)
         VERBATIM
     )
 else()
-    message(STATUS "Doxygen not found. Documentation target will not be available.")
+    message(STATUS "Doxygen not found. 'doc_doxygen' target will not be available.")
 endif()

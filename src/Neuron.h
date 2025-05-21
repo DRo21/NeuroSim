@@ -1,54 +1,52 @@
-#pragma once
+#ifndef NEURON_H
+#define NEURON_H
 
 /**
- * @brief Represents a single neuron based on the Izhikevich model.
+ * @brief Abstract base class representing a neuron.
+ *
+ * Defines the interface for neuron dynamics including voltage updates,
+ * synaptic input, spike detection, and membrane potential querying.
  */
-class Neuron {
+class Neuron
+{
 public:
+    virtual ~Neuron() = default;
+
     /**
-     * @brief Constructs a Neuron with given parameters.
-     * 
-     * @param a Recovery time scale.
-     * @param b Sensitivity of recovery variable to voltage.
-     * @param c After-spike reset value of membrane potential.
-     * @param d After-spike reset of recovery variable.
+     * @brief Advance the neuron's state by a time step.
+     * @param dt Time step in milliseconds.
      */
-    Neuron(double a = 0.02, double b = 0.2, double c = -65.0, double d = 8.0);
+    virtual void update(double dt) = 0;
 
     /**
-     * @brief Updates the neuron's state given the input current and time step.
-     * 
-     * @param inputCurrent External current input.
-     * @param dt Time step for numerical integration.
+     * @brief Inject synaptic input current into the neuron.
+     * @param i_syn Input current in nanoamperes (nA).
      */
-    void update(double inputCurrent, double dt);
+    virtual void receiveSynapticCurrent(double i_syn) = 0;
 
     /**
-     * @brief Checks if the neuron fired (spiked) during the last update.
-     * 
-     * @return true if the neuron fired.
-     * @return false otherwise.
+     * @brief Determine if the neuron has spiked in the most recent step.
+     * @return True if a spike occurred, false otherwise.
      */
-    bool fired() const;
+    virtual bool hasSpiked() const = 0;
 
     /**
-     * @brief Gets the current membrane voltage.
-     * 
-     * @return Current voltage (mV).
+     * @brief Return the time of the last spike (relative or absolute).
+     * @return Time in milliseconds.
      */
-    double getVoltage() const;
+    virtual double lastSpikeTime() const = 0;
 
     /**
-    * @brief Applies incoming synaptic current to the neuron.
-    * @param current The synaptic current to apply.
-    */
-    void receiveSynapticInput(double current);
+     * @brief Get the current membrane potential of the neuron.
+     * @return Voltage in millivolts (mV).
+     */
+    virtual double getVoltage() const = 0;
 
-private:
-    double v;       ///< Membrane potential (voltage).
-    double u;       ///< Recovery variable.
-    double a, b;    ///< Neuron model parameters.
-    double c, d;    ///< Reset values after spike.
-    bool spike;     ///< Indicates whether the neuron fired.
-    double synapticInput; ///< Accumulated synaptic current to be applied during update.
+    /**
+     * @brief Set external input current to be used on the next update.
+     * @param input External input current in nanoamperes (nA).
+     */
+    virtual void setInputCurrent(double input) = 0;
 };
+
+#endif // NEURON_H

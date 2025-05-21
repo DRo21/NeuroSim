@@ -2,22 +2,19 @@
 
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
-#include <deque>
-#include <QVector>
+#include <memory>
+#include "ITraceRenderer.h"
 
 /**
  * @class OpenGLWidget
- * @brief Renders a real-time voltage trace (line plot) using OpenGL + QPainter.
- *
- * Maintains a circular buffer of the most recent voltage samples (up to maxSamples).
- * Each call to addVoltageSample() pushes a new value; paintGL() draws the line.
+ * @brief Qt widget that hosts OpenGL-based trace visualizations.
  */
 class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     Q_OBJECT
 
 public:
     /**
-     * @brief Constructs the OpenGLWidget and preallocates storage.
+     * @brief Constructor.
      * @param parent Optional parent widget.
      */
     explicit OpenGLWidget(QWidget* parent = nullptr);
@@ -28,41 +25,29 @@ public:
     ~OpenGLWidget() override;
 
     /**
-     * @brief Adds a new voltage sample to the buffer and requests a repaint.
-     * @param voltage Value (e.g., in mV) to append to the trace.
+     * @brief Sets the active trace renderer.
+     * @param renderer Shared pointer to a trace renderer.
      */
-    void addVoltageSample(float voltage);
-
-    /**
-     * @brief Clears all stored voltage samples, effectively resetting the trace.
-     */
-    void clearVoltageTrace();
+    void setRenderer(std::shared_ptr<ITraceRenderer> renderer);
 
 protected:
     /**
-     * @brief Initializes OpenGL functions and state (once).
+     * @brief Initializes OpenGL state.
      */
     void initializeGL() override;
 
     /**
-     * @brief Updates OpenGL viewport on widget resize.
-     * @param w New width (pixels).
-     * @param h New height (pixels).
+     * @brief Handles OpenGL viewport resize.
+     * @param w Width.
+     * @param h Height.
      */
     void resizeGL(int w, int h) override;
 
     /**
-     * @brief Renders the voltage trace as a green polyline on a black background.
-     *
-     * Uses QPainter on top of the cleared OpenGL buffer for anti-aliased lines.
+     * @brief Paints the widget using the current renderer.
      */
     void paintGL() override;
 
 private:
-    std::deque<float> voltageSamples; ///< Circular buffer of recent samples.
-    const int maxSamples = 500;       ///< Maximum number of samples to keep.
-
-    // Voltage range for normalization (-80 mV to +50 mV)
-    const float minVoltage = -80.0f;
-    const float maxVoltage =  50.0f;
+    std::shared_ptr<ITraceRenderer> traceRenderer; ///< Current rendering strategy.
 };

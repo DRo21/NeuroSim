@@ -1,20 +1,29 @@
+// Synapse.cpp
 #include "Synapse.h"
 
-Synapse::Synapse(int sourceIndex, int targetIndex, double synapticWeight)
-    : source(sourceIndex), target(targetIndex), weight(synapticWeight) {}
+Synapse::Synapse(int srcIndex, int dstIndex, double weight)
+    : src_(srcIndex), dst_(dstIndex), weight_(weight)
+{}
 
-int Synapse::getSourceIndex() const {
-    return source;
+void Synapse::propagate(const std::vector<std::unique_ptr<Neuron>>& neurons) const
+{
+    // Only propagate if the source neuron spiked this step
+    if (neurons[src_]->hasSpiked()) {
+        neurons[dst_]->receiveSynapticCurrent(weight_);
+    }
 }
 
-int Synapse::getTargetIndex() const {
-    return target;
+int Synapse::src() const
+{
+    return src_;
 }
 
-double Synapse::getWeight() const {
-    return weight;
+int Synapse::dst() const
+{
+    return dst_;
 }
 
-void Synapse::setWeight(double newWeight) {
-    weight = newWeight;
+double Synapse::weight() const
+{
+    return weight_;
 }

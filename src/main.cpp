@@ -2,15 +2,12 @@
 #include "MainWindow.h"
 
 /**
- * @brief Entry point of the application.
- * 
- * Initializes the QApplication, creates and shows the main window.
- * 
- * @param argc Argument count.
- * @param argv Argument vector.
- * @return int Exit status.
+ * @brief Entry point for the NeuroSim Qt GUI application.
+ *
+ * This initializes the application and launches the main window.
  */
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     QApplication app(argc, argv);
     MainWindow window;
     window.show();
