@@ -50,6 +50,7 @@ void HeatmapWidget::paintEvent(QPaintEvent*)
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
     drawHeatmap(painter);
+
     if (selecting_ || !selectionRect_.isNull())
         drawSelection(painter);
 }
@@ -65,21 +66,35 @@ void HeatmapWidget::drawHeatmap(QPainter& p)
     double cellW = sz.width() * zoom_ / nx;
     double cellH = sz.height() * zoom_ / ny;
 
-    double minV = +1e9, maxV = -1e9;
     std::vector<double> vals(N);
     for (int i = 0; i < N; ++i) {
         vals[i] = computeValue(i);
-        minV = std::min(minV, vals[i]);
-        maxV = std::max(maxV, vals[i]);
     }
-    if (minV == maxV) maxV = minV + 1.0;
+
+    double minV, maxV;
+    switch (mode_) {
+        case Voltage:
+            minV = -80.0;
+            maxV = 40.0;
+            break;
+        case SpikeRate:
+            minV = 0.0;
+            maxV = 200.0;
+            break;
+        case Amplitude:
+            minV = -80.0;
+            maxV = 40.0;
+            break;
+    }
 
     for (int y = 0; y < ny; ++y) {
         for (int x = 0; x < nx; ++x) {
             int idx = y * nx + x;
             double norm = (vals[idx] - minV) / (maxV - minV);
-            QColor col = QColor::fromHslF((1.0 - norm) * 0.7, 1.0, 0.5);
-            p.fillRect(QRectF(x * cellW, y * cellH, cellW, cellH).translated(panOffset_), col);
+            norm = std::clamp(norm, 0.0, 1.0);
+            QColor col = QColor::fromHslF((1.0 - norm) * 0.75, 1.0, 0.5);
+            QRectF cell(x * cellW, y * cellH, cellW, cellH);
+            p.fillRect(cell.translated(panOffset_), col);
         }
     }
 }
@@ -87,6 +102,7 @@ void HeatmapWidget::drawHeatmap(QPainter& p)
 double HeatmapWidget::computeValue(int idx) const
 {
     if (!simulation_) return 0.0;
+
     switch (mode_) {
         case Voltage:    return simulation_->getNeuron(idx)->getVoltage();
         case SpikeRate:  return simulation_->getSpikeRate(idx, 100);
