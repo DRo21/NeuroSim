@@ -1,147 +1,127 @@
-#include <algorithm>
-#include <random>
-#include "Simulation.h"
-#include "Synapse.h"
-
 /**
- * @brief Constructs the Simulation and initializes each neuron.
- *
- * Each neuron is created using Izhikevich parameters (a, b, c, d) with slight random
- * variation to simulate biological diversity. The input current starts at 0.0.
- *
- * @param neuronCount Number of neurons to instantiate.
+ * @file Simulation.cpp
+ * @brief Implements Simulation class controlling a grid of spiking neurons.
+ * @author Dario Romandini
  */
-Simulation::Simulation(int neuronCount) {
-    m_neurons.reserve(neuronCount);
 
-    // Random noise distributions for Izhikevich parameters
-    std::default_random_engine rng(std::random_device{}());
-    std::uniform_real_distribution<double> noiseA(-0.005, 0.005);
-    std::uniform_real_distribution<double> noiseB(-0.01, 0.01);
-    std::uniform_real_distribution<double> noiseC(-5.0, 5.0);
-    std::uniform_real_distribution<double> noiseD(-2.0, 2.0);
+#include "Simulation.h"
+#include "IntegrateAndFireNeuron.h"
+#include <random>
+#include <cmath>
+#include <algorithm>
 
-    for (int i = 0; i < neuronCount; ++i) {
-        double a = 0.02 + noiseA(rng);
-        double b = 0.2  + noiseB(rng);
-        double c = -65.0 + noiseC(rng);
-        double d = 8.0   + noiseD(rng);
-
-        m_neurons.emplace_back(a, b, c, d);
-    }
+Simulation::Simulation(int nx, int ny, double dt)
+    : nx_(nx), ny_(ny), dt_(dt), currentTime_(0.0)
+{
+    initializeNeurons();
 }
 
-/**
- * @brief Advances the simulation by one time step for all neurons.
- *
- * Calls `Neuron::update(inputCurrent, dt)` on each neuron, then processes any
- * firing activity through the synapses.
- *
- * @param dt Time step to advance (e.g., 0.1).
- */
-void Simulation::step(double dt) {
-    for (auto& neuron : m_neurons) {
-        neuron.update(m_inputCurrent, dt);
+void Simulation::initializeNeurons()
+{
+    neurons_.clear();
+    neurons_.reserve(nx_ * ny_);
+    for (int i = 0; i < nx_ * ny_; ++i) {
+        neurons_.emplace_back(std::make_unique<IntegrateAndFireNeuron>());
     }
 
-    for (const auto& synapse : m_synapses) {
-        int source = synapse.getSourceIndex();
-        int target = synapse.getTargetIndex();
-        double weight = synapse.getWeight();
+    synapses_.clear();
+    events_.clear();
+    currentTime_ = 0.0;
+}
 
-        if (source >= 0 && source < static_cast<int>(m_neurons.size()) &&
-            m_neurons[source].fired()) {
-            if (target >= 0 && target < static_cast<int>(m_neurons.size())) {
-                m_neurons[target].receiveSynapticInput(weight);
+void Simulation::connectRandom(double probability, double weight)
+{
+    std::mt19937 gen{std::random_device{}()};
+    std::uniform_real_distribution<> dist(0.0, 1.0);
+
+    int N = neuronCount();
+    for (int i = 0; i < N; ++i) {
+        for (int j = 0; j < N; ++j) {
+            if (i != j && dist(gen) < probability) {
+                synapses_.emplace_back(i, j, weight);
             }
         }
     }
 }
 
-/**
- * @brief Sets the uniform input current applied to every neuron.
- * @param current The new input current value.
- */
-void Simulation::setInputCurrent(double current) {
-    m_inputCurrent = current;
-}
-
-/**
- * @brief Returns the current external input current value.
- * @return double The input current.
- */
-double Simulation::getInputCurrent() const {
-    return m_inputCurrent;
-}
-
-/**
- * @brief Accessor for the internal neuron vector.
- * @return const std::vector<Neuron>& Reference to all neurons.
- */
-const std::vector<Neuron>& Simulation::neurons() const {
-    return m_neurons;
-}
-
-/**
- * @brief Builds a 2D grid of normalized voltages for heatmap display.
- *
- * @param width  Number of columns in output.
- * @param height Number of rows in output.
- * @return std::vector<float> Flattened vector length `width*height`.
- */
-std::vector<float> Simulation::getVoltageGrid(int width, int height) const {
-    std::vector<float> grid(width * height, 0.0f);
-    int neuronCount = static_cast<int>(m_neurons.size());
-    if (neuronCount == 0) {
-        return grid;
-    }
-
-    for (int i = 0; i < width * height; ++i) {
-        int idx = i % neuronCount;
-        float v = static_cast<float>(m_neurons[idx].getVoltage());
-        float normalized = (v + 80.0f) / 110.0f;
-        normalized = std::clamp(normalized, 0.0f, 1.0f);
-        grid[i] = normalized;
-    }
-    return grid;
-}
-
-/**
- * @brief Selects a neuron index for detailed plotting (clamped to valid range).
- * @param index Desired neuron index.
- */
-void Simulation::setSelectedNeuron(int index) {
-    if (m_neurons.empty()) {
-        m_selectedNeuron = 0;
-    } else {
-        m_selectedNeuron = std::clamp(index, 0, static_cast<int>(m_neurons.size() - 1));
+void Simulation::connectByProximity(double radius, double weight)
+{
+    for (int y1 = 0; y1 < ny_; ++y1) {
+        for (int x1 = 0; x1 < nx_; ++x1) {
+            int i = index(x1, y1);
+            for (int y2 = 0; y2 < ny_; ++y2) {
+                for (int x2 = 0; x2 < nx_; ++x2) {
+                    int j = index(x2, y2);
+                    if (i != j) {
+                        double dx = x1 - x2;
+                        double dy = y1 - y2;
+                        if (std::sqrt(dx * dx + dy * dy) <= radius) {
+                            synapses_.emplace_back(i, j, weight);
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
-/**
- * @brief Returns the index of the currently selected neuron.
- * @return int Index in [0, size−1].
- */
-int Simulation::getSelectedNeuron() const {
-    return m_selectedNeuron;
-}
-
-/**
- * @brief Adds a synapse between two neurons.
- * @param source Index of source neuron.
- * @param target Index of target neuron.
- * @param weight Synaptic weight.
- */
-void Simulation::addSynapse(int source, int target, double weight) {
-    if (source >= 0 && source < static_cast<int>(m_neurons.size()) &&
-        target >= 0 && target < static_cast<int>(m_neurons.size())) {
-        m_synapses.emplace_back(source, target, weight);
+void Simulation::step()
+{
+    for (auto& neuron : neurons_) {
+        neuron->receiveSynapticCurrent(globalInputCurrent_);
+        neuron->update(dt_);
     }
+
+    for (auto& syn : synapses_) {
+        syn.propagate(neurons_);
+    }
+
+    for (int i = 0; i < neuronCount(); ++i) {
+        if (neurons_[i]->hasSpiked()) {
+            events_.emplace_back(currentTime_, i);
+        }
+    }
+
+    currentTime_ += dt_;
 }
 
-/**
- * @brief Removes all existing synaptic connections.
- */
-void Simulation::clearSynapses() {
-    m_synapses.clear();
+int Simulation::neuronCount() const { return static_cast<int>(neurons_.size()); }
+int Simulation::nx() const { return nx_; }
+int Simulation::ny() const { return ny_; }
+double Simulation::currentTime() const { return currentTime_; }
+
+Neuron* Simulation::getNeuron(int idx) const
+{
+    return neurons_.at(idx).get();
+}
+
+const std::vector<std::pair<double, int>>& Simulation::spikeEvents() const
+{
+    return events_;
+}
+
+double Simulation::getSpikeRate(int idx, double window_ms) const
+{
+    double startTime = std::max(0.0, currentTime_ - window_ms);
+    int count = std::count_if(events_.begin(), events_.end(),
+        [=](const auto& ev) {
+            return ev.second == idx && ev.first >= startTime && ev.first <= currentTime_;
+        });
+
+    return (window_ms > 0.0) ? (count * 1000.0 / window_ms) : 0.0;
+}
+
+double Simulation::getSpikeAmplitude(int idx, double /*window_ms*/) const
+{
+    return neurons_.at(idx)->getVoltage();
+}
+
+void Simulation::setInputCurrent(double current)
+{
+    globalInputCurrent_ = current;
+}
+
+void Simulation::setSelectedNeuron(int index)
+{
+    selectedNeuronIndex_ = index;
 }
