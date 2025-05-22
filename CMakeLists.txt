@@ -29,6 +29,7 @@ add_subdirectory(extern/pybind11)
 # -------------------------
 add_library(neuro_core
     src/IntegrateAndFireNeuron.cpp
+    src/IzhikevichNeuron.cpp
     src/Synapse.cpp
     src/Simulation.cpp
 )
