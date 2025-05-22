@@ -1,49 +1,61 @@
-#pragma once
+/**
+ * @file Synapse.h
+ * @brief Defines the Synapse class that connects two neurons in the network model. 
+ *        Delivers current based on spiking activity of the source neuron.
+ * @author Dario Romandini
+ */
+
+#ifndef SYNAPSE_H
+#define SYNAPSE_H
+
+#include <memory>
+#include <vector>
+#include "Neuron.h"
 
 /**
  * @class Synapse
- * @brief Represents a unidirectional connection from one neuron to another.
+ * @brief Models a directed synapse between two neurons.
  *
- * A Synapse connects two neurons by index in a simulation, and has a weight
- * which determines the strength and type (excitatory/inhibitory) of the connection.
+ * Delivers a fixed-weighted current to the destination neuron if the source neuron spikes.
  */
-class Synapse {
+class Synapse
+{
 public:
     /**
-     * @brief Constructs a synapse between source and target neurons.
-     *
-     * @param sourceIndex Index of the presynaptic neuron.
-     * @param targetIndex Index of the postsynaptic neuron.
-     * @param synapticWeight Synaptic strength. Positive is excitatory, negative is inhibitory.
+     * @brief Construct a synapse between two neurons.
+     * @param srcIndex Index of the source neuron.
+     * @param dstIndex Index of the destination neuron.
+     * @param weight Synaptic weight (nA).
      */
-    Synapse(int sourceIndex, int targetIndex, double synapticWeight);
+    Synapse(int srcIndex, int dstIndex, double weight);
 
     /**
-     * @brief Gets the index of the source (presynaptic) neuron.
-     * @return Index of the source neuron.
+     * @brief Propagate a spike from source to destination if source neuron has spiked.
+     * @param neurons Vector of neuron pointers.
      */
-    int getSourceIndex() const;
+    void propagate(const std::vector<std::unique_ptr<Neuron>>& neurons) const;
 
-    /**
-     * @brief Gets the index of the target (postsynaptic) neuron.
-     * @return Index of the target neuron.
-     */
-    int getTargetIndex() const;
+    /** @return Index of the source neuron. */
+    int src() const;
 
-    /**
-     * @brief Gets the weight of the synapse.
-     * @return The synaptic weight.
-     */
-    double getWeight() const;
+    /** @return Index of the destination neuron. */
+    int dst() const;
 
-    /**
-     * @brief Sets a new synaptic weight.
-     * @param newWeight The new synaptic weight.
-     */
-    void setWeight(double newWeight);
+    /** @return Synaptic weight in nanoamperes (nA). */
+    double weight() const;
+
+    /** @brief Set the synaptic weight. */
+    void setWeight(double w);
+
+    // Accessors for unit test compatibility
+    double getWeight() const { return weight(); }
+    int getSourceIndex() const { return src(); }
+    int getTargetIndex() const { return dst(); }
 
 private:
-    int source;    ///< Index of the presynaptic neuron.
-    int target;    ///< Index of the postsynaptic neuron.
-    double weight; ///< Strength of the connection.
+    int src_;         ///< Source neuron index
+    int dst_;         ///< Destination neuron index
+    double weight_;   ///< Synaptic weight (nA)
 };
+
+#endif // SYNAPSE_H

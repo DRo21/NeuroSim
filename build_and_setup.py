@@ -72,7 +72,7 @@ def main():
     create_venv(venv_path)
 
     # Install required Python packages
-    required_packages = ["matplotlib", "numpy", "jupyter"]
+    required_packages = ["matplotlib", "numpy", "jupyter", "pandas"]
     install_packages(venv_path, required_packages)
 
     activate_venv_cmd(venv_path)

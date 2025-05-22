@@ -1,59 +1,49 @@
-#pragma once
+/**
+ * @file HeatmapWidget.h
+ * @brief Defines the HeatmapWidget for visualizing neuron values in a grid.
+ * @author Dario Romandini
+ */
 
-#include <QOpenGLWidget>
-#include <QOpenGLFunctions>
-#include <vector>
+#ifndef HEATMAPWIDGET_H
+#define HEATMAPWIDGET_H
+
+#include <QWidget>
+#include "Simulation.h"
 
 /**
  * @class HeatmapWidget
- * @brief Custom OpenGL widget for rendering a 2D heatmap.
- *
- * Interprets a flat vector of floats (normalized in [0,1]) as a `width × height`
- * grid. Colors range from blue (0) to red (1). Renders each cell as a quad in OpenGL.
+ * @brief Widget displaying a 2D heatmap of neuron values (voltage, spike rate, amplitude).
  */
-class HeatmapWidget : public QOpenGLWidget, protected QOpenGLFunctions {
+class HeatmapWidget : public QWidget
+{
     Q_OBJECT
 
 public:
-    /**
-     * @brief Constructs the HeatmapWidget.
-     * @param parent Optional parent widget.
-     */
-    explicit HeatmapWidget(QWidget* parent = nullptr);
+    enum DisplayMode { Voltage = 0, SpikeRate, Amplitude };
 
-    /**
-     * @brief Updates the internal heatmap data and requests a repaint.
-     * @param data   Flattened vector of size `width * height`, values in [0,1].
-     * @param width  Number of columns in the grid.
-     * @param height Number of rows in the grid.
-     */
-    void setHeatmapData(const std::vector<float>& data, int width, int height);
+    explicit HeatmapWidget(QWidget* parent = nullptr);
+    void setSimulation(Simulation* sim);
+    void setDisplayMode(DisplayMode mode);
+    DisplayMode displayMode() const;
+    void updateView();
 
 protected:
-    /**
-     * @brief Initializes OpenGL functions and state.
-     */
-    void initializeGL() override;
-
-    /**
-     * @brief Handles viewport resize events.
-     * @param w New widget width in pixels.
-     * @param h New widget height in pixels.
-     */
-    void resizeGL(int w, int h) override;
-
-    /**
-     * @brief Renders the heatmap as colored quads.
-     *
-     * Iterates over the 2D grid. For each cell:
-     *   - Retrieves normalized value in [0,1].
-     *   - Maps it to (r,g,b) = (value, 0, 1−value).
-     *   - Draws a quad spanning the appropriate OpenGL‐normalized coordinates.
-     */
-    void paintGL() override;
+    void paintEvent(QPaintEvent* ev) override;
+    void wheelEvent(QWheelEvent* ev) override;
+    void mousePressEvent(QMouseEvent* ev) override;
+    void mouseMoveEvent(QMouseEvent* ev) override;
 
 private:
-    std::vector<float> m_data; ///< Flattened heatmap data (size = width * height).
-    int m_width  = 0;          ///< Number of columns in the grid.
-    int m_height = 0;          ///< Number of rows in the grid.
+    Simulation* simulation_;
+    DisplayMode mode_;
+    double zoom_;
+    QPoint panOffset_;
+    bool selecting_;
+    QRect selectionRect_;
+
+    void drawHeatmap(QPainter& p);
+    void drawSelection(QPainter& p);
+    double computeValue(int idx) const;
 };
+
+#endif // HEATMAPWIDGET_H

@@ -1,75 +1,95 @@
-#pragma once
+/**
+ * @file MainWindow.h
+ * @brief Main GUI window for the NeuroSim application.
+ * @author Dario Romandini
+ */
+
+#ifndef MAINWINDOW_H
+#define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QTimer>
-#include <QPlainTextEdit>
-#include <QLineEdit>
-#include <QHBoxLayout>
-#include "OpenGLWidget.h"
-#include "HeatmapWidget.h"
-#include "Simulation.h"
-#include "Constants.h"
+
+class ControlPanelWidget;
+class HeatmapWidget;
+class TraceViewWidget;
+class RasterPlotWidget;
+class Simulation;
+class QSplitter;
+class QTimer;
 
 /**
  * @class MainWindow
- * @brief Main application window for the NeuroSim neural activity simulator.
+ * @brief Integrates simulation logic with GUI widgets for visualization and control.
  *
- * Manages the UI components, simulation timer, and command input/output.
- * Displays a voltage trace (left) and a heatmap of all neurons (right),
- * plus a console-style command input at the bottom.
+ * Contains widgets for controlling the simulation and views for displaying neuron activity.
  */
-class MainWindow : public QMainWindow {
+class MainWindow : public QMainWindow
+{
     Q_OBJECT
 
 public:
     /**
-     * @brief Constructs the MainWindow UI.
+     * @brief Constructs the main window.
      * @param parent Optional parent widget.
      */
-    explicit MainWindow(QWidget *parent = nullptr);
+    explicit MainWindow(QWidget* parent = nullptr);
 
     /**
-     * @brief Destructor for MainWindow.
+     * @brief Destructor.
      */
-    ~MainWindow();
+    ~MainWindow() override;
+
+public slots:
+    /** Starts the simulation timer. */
+    void onStartSimulation();
+
+    /** Stops the simulation timer. */
+    void onStopSimulation();
 
 private slots:
     /**
-     * @brief Timer slot that advances simulation and updates UI.
-     *
-     * - Calls Simulation::step(Constants::SimulationTimeStep)
-     * - Updates the voltage trace from the selected neuron (index 0 by default)
-     * - Regenerates and displays a small 3×3 heatmap of all neurons
+     * @brief Reinitializes the simulation with a new grid size.
+     * @param nx Number of neurons along X-axis.
+     * @param ny Number of neurons along Y-axis.
      */
-    void updateSimulation();
+    void onGridSizeChanged(int nx, int ny);
 
     /**
-     * @brief Processes a command string entered by the user.
-     *
-     * Supported commands:
-     *   - start                  : starts the simulation loop
-     *   - stop                   : stops the simulation loop
-     *   - set current <value>    : sets the input current for all neurons
-     *   - select neuron <index>  : selects neuron for voltage trace
-     *   - status                 : prints current simulation state
-     *   - help                   : shows list of available commands
+     * @brief Updates the input current for all neurons.
+     * @param current Input current in nA.
      */
-    void handleCommand();
+    void onInputCurrentChanged(double current);
+
+    /**
+     * @brief Updates the heatmap display mode.
+     * @param modeIndex Index of the selected display mode.
+     */
+    void onDisplayModeChanged(int modeIndex);
+
+    /**
+     * @brief Sets the neuron index to monitor in the trace view.
+     * @param neuronIndex Index of the neuron to visualize.
+     */
+    void onNeuronSelected(int neuronIndex);
+
+    /** Executes one simulation step and updates all visualizations. */
+    void onSimulationStep();
 
 private:
-    /**
-     * @brief Appends a line of text to the command output log (read-only widget).
-     * @param text The message to append.
-     */
-    void appendToLog(const QString& text);
+    /** Initializes the layout and widgets. */
+    void setupUi();
 
-    OpenGLWidget* openGLWidget;    ///< Widget for rendering a single-neuron voltage trace.
-    HeatmapWidget* heatmapWidget;  ///< Widget for rendering the 3×3 heatmap.
-    Simulation simulation;         ///< Simulation engine (manages all neurons).
-    QTimer* simTimer;              ///< Timer that fires every SimulationIntervalMs.
-    QPlainTextEdit* commandOutput; ///< Read-only text area for log messages.
-    QLineEdit* commandInput;       ///< Single-line input field for commands.
-    bool simulationRunning = false;///< Flag indicating whether the simulation is active.
+    /** Connects UI signals to MainWindow slots. */
+    void connectSignals();
 
-    int selectedNeuron;            ///< Currently selected neuron index for voltage trace display.
+    ControlPanelWidget* controlPanel_;  ///< User control panel
+    QSplitter*          viewSplitter_;  ///< Splits main visual views
+    HeatmapWidget*      heatmapView_;   ///< Visualizes heatmap of neuron data
+    TraceViewWidget*    traceView_;     ///< Displays voltage trace of selected neuron(s)
+    RasterPlotWidget*   rasterView_;    ///< Displays spike raster plot
+    Simulation*         simulation_;    ///< Underlying spiking neural network model
+    QTimer*             simTimer_;      ///< Drives simulation steps
+    double              currentInput_;  ///< Global external input current
 };
+
+#endif // MAINWINDOW_H

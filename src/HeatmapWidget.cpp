@@ -1,79 +1,145 @@
+/**
+ * @file HeatmapWidget.cpp
+ * @brief Implements the HeatmapWidget for visualizing neuron activity as a 2D heatmap.
+ * @author Dario Romandini
+ */
+
 #include "HeatmapWidget.h"
+#include <QPainter>
+#include <QMouseEvent>
+#include <QSizePolicy>
 #include <algorithm>
+#include <cmath>
 
-/**
- * @brief Constructs the HeatmapWidget.
- * @param parent Optional parent widget.
- */
 HeatmapWidget::HeatmapWidget(QWidget* parent)
-    : QOpenGLWidget(parent)
-{}
+    : QWidget(parent),
+      simulation_(nullptr),
+      mode_(Voltage),
+      zoom_(1.5),
+      panOffset_(0, 0),
+      selecting_(false)
+{
+    setMinimumSize(300, 300);
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+}
 
-/**
- * @brief Updates internal data and triggers an OpenGL repaint.
- * @param data   Flattened grid of size width×height, each ∈ [0,1].
- * @param width  Number of columns for the grid.
- * @param height Number of rows for the grid.
- */
-void HeatmapWidget::setHeatmapData(const std::vector<float>& data, int width, int height) {
-    m_data   = data;
-    m_width  = width;
-    m_height = height;
+void HeatmapWidget::setSimulation(Simulation* sim)
+{
+    simulation_ = sim;
+    updateView();
+}
+
+void HeatmapWidget::setDisplayMode(DisplayMode mode)
+{
+    mode_ = mode;
+    updateView();
+}
+
+HeatmapWidget::DisplayMode HeatmapWidget::displayMode() const
+{
+    return mode_;
+}
+
+void HeatmapWidget::updateView()
+{
     update();
 }
 
-/**
- * @brief Initializes OpenGL state (called once).
- *
- * Enables standard functions, sets clear color to black.
- */
-void HeatmapWidget::initializeGL() {
-    initializeOpenGLFunctions();
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+void HeatmapWidget::paintEvent(QPaintEvent*)
+{
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+    drawHeatmap(painter);
+
+    if (selecting_ || !selectionRect_.isNull())
+        drawSelection(painter);
 }
 
-/**
- * @brief Adjusts the OpenGL viewport when the widget is resized.
- * @param w New width (pixels).
- * @param h New height (pixels).
- */
-void HeatmapWidget::resizeGL(int w, int h) {
-    glViewport(0, 0, w, h);
-}
+void HeatmapWidget::drawHeatmap(QPainter& p)
+{
+    if (!simulation_) return;
 
-/**
- * @brief Renders the heatmap by drawing colored quads for each cell.
- *
- * Each grid cell (x,y) is drawn as a quad in [-1,1] coordinates. The color is
- * calculated by mapping the data value ∈ [0,1] to (r=value, g=0, b=1-value).
- */
-void HeatmapWidget::paintGL() {
-    glClear(GL_COLOR_BUFFER_BIT);
+    int nx = simulation_->nx();
+    int ny = simulation_->ny();
+    int N = simulation_->neuronCount();
+    QSize sz = size();
+    double cellW = sz.width() * zoom_ / nx;
+    double cellH = sz.height() * zoom_ / ny;
 
-    if (m_data.empty() || m_width == 0 || m_height == 0) {
-        return;
+    std::vector<double> vals(N);
+    for (int i = 0; i < N; ++i) {
+        vals[i] = computeValue(i);
     }
 
-    glBegin(GL_QUADS);
-    for (int y = 0; y < m_height; ++y) {
-        for (int x = 0; x < m_width; ++x) {
-            float value = std::clamp(m_data[y * m_width + x], 0.0f, 1.0f);
-            float r = value;
-            float g = 0.0f;
-            float b = 1.0f - value;
-            glColor3f(r, g, b);
+    double minV, maxV;
+    switch (mode_) {
+        case Voltage:
+            minV = -80.0;
+            maxV = 40.0;
+            break;
+        case SpikeRate:
+            minV = 0.0;
+            maxV = 200.0;
+            break;
+        case Amplitude:
+            minV = -80.0;
+            maxV = 40.0;
+            break;
+    }
 
-            // Convert (x,y) cell to OpenGL coords in [-1,1]
-            float x0 =  static_cast<float>(x)     / m_width  * 2.0f - 1.0f;
-            float y0 =  static_cast<float>(y)     / m_height * 2.0f - 1.0f;
-            float x1 = (static_cast<float>(x+1)  / m_width ) * 2.0f - 1.0f;
-            float y1 = (static_cast<float>(y+1)  / m_height) * 2.0f - 1.0f;
-
-            glVertex2f(x0, y0);
-            glVertex2f(x1, y0);
-            glVertex2f(x1, y1);
-            glVertex2f(x0, y1);
+    for (int y = 0; y < ny; ++y) {
+        for (int x = 0; x < nx; ++x) {
+            int idx = y * nx + x;
+            double norm = (vals[idx] - minV) / (maxV - minV);
+            norm = std::clamp(norm, 0.0, 1.0);
+            QColor col = QColor::fromHslF((1.0 - norm) * 0.75, 1.0, 0.5);
+            QRectF cell(x * cellW, y * cellH, cellW, cellH);
+            p.fillRect(cell.translated(panOffset_), col);
         }
     }
-    glEnd();
+}
+
+double HeatmapWidget::computeValue(int idx) const
+{
+    if (!simulation_) return 0.0;
+
+    switch (mode_) {
+        case Voltage:    return simulation_->getNeuron(idx)->getVoltage();
+        case SpikeRate:  return simulation_->getSpikeRate(idx, 100);
+        case Amplitude:  return simulation_->getSpikeAmplitude(idx, 100);
+    }
+    return 0.0;
+}
+
+void HeatmapWidget::drawSelection(QPainter& p)
+{
+    QPen pen(Qt::DashLine);
+    pen.setWidth(2);
+    p.setPen(pen);
+    p.drawRect(selectionRect_);
+}
+
+void HeatmapWidget::wheelEvent(QWheelEvent* ev)
+{
+    zoom_ *= std::pow(1.001, ev->angleDelta().y());
+    updateView();
+}
+
+void HeatmapWidget::mousePressEvent(QMouseEvent* ev)
+{
+    if (ev->buttons() & Qt::LeftButton) {
+        selecting_ = true;
+        selectionRect_.setTopLeft(ev->pos());
+        selectionRect_.setBottomRight(ev->pos());
+    } else if (ev->buttons() & Qt::RightButton) {
+        panOffset_ += ev->pos();
+    }
+}
+
+void HeatmapWidget::mouseMoveEvent(QMouseEvent* ev)
+{
+    if (selecting_) {
+        selectionRect_.setBottomRight(ev->pos());
+        update();
+    }
 }
