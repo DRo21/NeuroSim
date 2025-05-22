@@ -1,3 +1,9 @@
+/**
+ * @file ControlPanelWidget.cpp
+ * @brief Implementation of the ControlPanelWidget class for simulation control UI.
+ * @author Dario Romandini
+ */
+
 #include "ControlPanelWidget.h"
 #include <QPushButton>
 #include <QSpinBox>

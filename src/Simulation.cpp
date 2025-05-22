@@ -1,3 +1,9 @@
+/**
+ * @file Simulation.cpp
+ * @brief Implements Simulation class controlling a grid of spiking neurons.
+ * @author Dario Romandini
+ */
+
 #include "Simulation.h"
 #include "IntegrateAndFireNeuron.h"
 #include <random>

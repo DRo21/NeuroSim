@@ -1,11 +1,18 @@
+/**
+ * @file Neuron.h
+ * @brief Abstract base class representing a neuron model interface.
+ * @author Dario Romandini
+ */
+
 #ifndef NEURON_H
 #define NEURON_H
 
 /**
- * @brief Abstract base class representing a neuron.
+ * @class Neuron
+ * @brief Interface for neuron models (e.g., Izhikevich, LIF).
  *
- * Defines the interface for neuron dynamics including voltage updates,
- * synaptic input, spike detection, and membrane potential querying.
+ * Provides a standard API for updating state, handling synaptic input,
+ * checking for spikes, accessing voltage, and setting input current.
  */
 class Neuron
 {
@@ -31,7 +38,7 @@ public:
     virtual bool hasSpiked() const = 0;
 
     /**
-     * @brief Return the time of the last spike (relative or absolute).
+     * @brief Return the time of the last spike (if applicable).
      * @return Time in milliseconds.
      */
     virtual double lastSpikeTime() const = 0;

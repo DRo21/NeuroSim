@@ -1,3 +1,9 @@
+/**
+ * @file TraceViewWidget.cpp
+ * @brief Implementation of TraceViewWidget for voltage trace display in NeuroSim GUI.
+ * @author Dario Romandini
+ */
+
 #include "TraceViewWidget.h"
 #include <QPainter>
 #include <QMouseEvent>
@@ -100,10 +106,11 @@ void TraceViewWidget::drawCursorInfo(QPainter& p)
 
     const auto& buf = voltageBuffers_[neuron];
     if (buf.empty()) return;
+
     int sampleIdx = std::clamp(int(tFraction * (buf.size() - 1)), 0, int(buf.size() - 1));
     double v = buf[sampleIdx];
 
-    QString info = QString("t=%1 ms, n=%2, V=%3 mV")
+    QString info = QString("t=%1 ms, n=%2, V=%3 mV")
                        .arg(tMs, 0, 'f', 1)
                        .arg(neuron)
                        .arg(v, 0, 'f', 1);

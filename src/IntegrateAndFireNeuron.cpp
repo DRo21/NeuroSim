@@ -1,3 +1,9 @@
+/**
+ * @file IntegrateAndFireNeuron.cpp
+ * @brief Implements the leaky integrate-and-fire neuron behavior logic.
+ * @author Dario Romandini
+ */
+
 #include "IntegrateAndFireNeuron.h"
 
 IntegrateAndFireNeuron::IntegrateAndFireNeuron(double v_rest, double v_thresh,

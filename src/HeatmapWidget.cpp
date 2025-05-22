@@ -1,3 +1,9 @@
+/**
+ * @file HeatmapWidget.cpp
+ * @brief Implements the HeatmapWidget for visualizing neuron activity as a 2D heatmap.
+ * @author Dario Romandini
+ */
+
 #include "HeatmapWidget.h"
 #include <QPainter>
 #include <QMouseEvent>

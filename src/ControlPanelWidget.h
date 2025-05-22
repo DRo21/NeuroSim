@@ -1,3 +1,9 @@
+/**
+ * @file ControlPanelWidget.h
+ * @brief GUI widget for controlling simulation parameters in NeuroSim.
+ * @author Dario Romandini
+ */
+
 #ifndef CONTROLPANELWIDGET_H
 #define CONTROLPANELWIDGET_H
 
@@ -8,10 +14,20 @@ class QSpinBox;
 class QSlider;
 class QComboBox;
 
+/**
+ * @class ControlPanelWidget
+ * @brief A widget providing controls for starting/stopping the simulation,
+ * adjusting grid size, input current, display mode, and selecting neurons.
+ */
 class ControlPanelWidget : public QWidget
 {
     Q_OBJECT
+
 public:
+    /**
+     * @brief Constructor.
+     * @param parent Parent widget.
+     */
     explicit ControlPanelWidget(QWidget* parent = nullptr);
 
 signals:

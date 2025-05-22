@@ -1,11 +1,16 @@
-// RasterPlotWidget.cpp
+/**
+ * @file RasterPlotWidget.cpp
+ * @brief Implementation of RasterPlotWidget for spike time visualization in a raster format.
+ * @author Dario Romandini
+ */
+
 #include "RasterPlotWidget.h"
 #include <QPainter>
 
 RasterPlotWidget::RasterPlotWidget(QWidget* parent)
     : QWidget(parent), simulation_(nullptr)
 {
-    setMinimumSize(200,200);
+    setMinimumSize(200, 200);
 }
 
 void RasterPlotWidget::setSimulation(Simulation* sim)
@@ -23,11 +28,12 @@ void RasterPlotWidget::paintEvent(QPaintEvent*)
 {
     QPainter p(this);
     p.fillRect(rect(), Qt::black);
+
     if (!simulation_) return;
 
     const auto& events = simulation_->spikeEvents();
     double t1 = simulation_->currentTime();
-    double t0 = std::max(0.0, t1 - 200.0);  // 200 ms history
+    double t0 = std::max(0.0, t1 - 200.0);  // Show 200 ms window
     int w = width(), h = height();
     int N = simulation_->neuronCount();
 

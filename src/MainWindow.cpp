@@ -1,3 +1,9 @@
+/**
+ * @file MainWindow.cpp
+ * @brief Implements the main application window and simulation loop for NeuroSim.
+ * @author Dario Romandini
+ */
+
 #include "MainWindow.h"
 #include "ControlPanelWidget.h"
 #include "HeatmapWidget.h"
@@ -23,7 +29,7 @@ MainWindow::MainWindow(QWidget* parent)
 {
     setupUi();
     connectSignals();
-    onGridSizeChanged(10, 10);
+    onGridSizeChanged(10, 10); // default grid size
 }
 
 MainWindow::~MainWindow()
@@ -89,8 +95,9 @@ void MainWindow::onGridSizeChanged(int nx, int ny)
 void MainWindow::onInputCurrentChanged(double current)
 {
     currentInput_ = current;
-    if (simulation_)
+    if (simulation_) {
         simulation_->setInputCurrent(current);
+    }
 }
 
 void MainWindow::onDisplayModeChanged(int modeIndex)
@@ -101,8 +108,9 @@ void MainWindow::onDisplayModeChanged(int modeIndex)
 void MainWindow::onNeuronSelected(int neuronIndex)
 {
     traceView_->setNeuronIndex(neuronIndex);
-    if (simulation_)
+    if (simulation_) {
         simulation_->setSelectedNeuron(neuronIndex);
+    }
 }
 
 void MainWindow::onSimulationStep()

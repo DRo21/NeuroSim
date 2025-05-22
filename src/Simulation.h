@@ -1,3 +1,9 @@
+/**
+ * @file Simulation.h
+ * @brief Manages a spiking neural network grid and synaptic connections.
+ * @author Dario Romandini
+ */
+
 #ifndef SIMULATION_H
 #define SIMULATION_H
 
@@ -11,54 +17,54 @@
  * @class Simulation
  * @brief Manages a network of spiking neurons and synaptic interactions.
  *
- * This class encapsulates a 2D grid of neurons, a list of synaptic connections,
- * and spike-event recording. It provides the main step-based update loop and
- * access to statistics and voltages for visualization.
+ * Encapsulates a 2D grid of neurons, a list of synaptic connections,
+ * and spike-event recording. Provides the main step-based update loop and
+ * access to voltages and spike data for visualization.
  */
 class Simulation
 {
 public:
     /**
-     * @brief Constructor for Simulation.
-     * @param nx Number of columns in the neuron grid.
-     * @param ny Number of rows in the neuron grid.
-     * @param dt Time step size in milliseconds.
+     * @brief Constructs a Simulation.
+     * @param nx Grid width (columns).
+     * @param ny Grid height (rows).
+     * @param dt Integration time step in milliseconds.
      */
     Simulation(int nx, int ny, double dt = 0.1);
 
-    /** @brief Initialize and reset all neurons in the grid. */
+    /** @brief Initialize or reset all neurons. */
     void initializeNeurons();
 
     /**
-     * @brief Randomly connect neurons.
-     * @param p Probability of connection per pair.
-     * @param weight Synaptic weight (nA).
+     * @brief Create random connections between neurons.
+     * @param p Probability of a connection between two neurons.
+     * @param weight Synaptic weight in nanoamperes (nA).
      */
     void connectRandom(double p, double weight);
 
     /**
-     * @brief Connect neurons by proximity (within radius).
-     * @param radius Euclidean radius (grid units).
+     * @brief Create local connections within a radius.
+     * @param radius Maximum distance (in grid units).
      * @param weight Synaptic weight (nA).
      */
     void connectByProximity(double radius, double weight);
 
-    /** @brief Advance simulation state by one time step (dt). */
+    /** @brief Advance the network by one simulation step (dt). */
     void step();
 
-    /** @return Total number of neurons (nx * ny). */
+    /** @return Total number of neurons (nx × ny). */
     int neuronCount() const;
 
-    /** @return Grid width (columns). */
+    /** @return Number of columns in the neuron grid. */
     int nx() const;
 
-    /** @return Grid height (rows). */
+    /** @return Number of rows in the neuron grid. */
     int ny() const;
 
     /**
-     * @brief Get pointer to a neuron by index.
-     * @param idx Index in range [0, neuronCount()).
-     * @return Neuron pointer.
+     * @brief Get a pointer to a neuron by index.
+     * @param idx Linear index of the neuron.
+     * @return Pointer to Neuron.
      */
     Neuron* getNeuron(int idx) const;
 
@@ -66,35 +72,35 @@ public:
     double currentTime() const;
 
     /**
-     * @brief Get spike events from the start.
+     * @brief Get spike history.
      * @return Vector of (time, neuron index) pairs.
      */
     const std::vector<std::pair<double, int>>& spikeEvents() const;
 
     /**
-     * @brief Compute spike rate over a time window.
+     * @brief Calculate spike rate for a neuron over a time window.
      * @param idx Neuron index.
-     * @param window_ms Time window (ms).
+     * @param window_ms Time window in milliseconds.
      * @return Spike rate in Hz.
      */
     double getSpikeRate(int idx, double window_ms) const;
 
     /**
-     * @brief Estimate spike amplitude for a neuron.
+     * @brief Estimate spike amplitude (proxy).
      * @param idx Neuron index.
-     * @param window_ms Time window (currently unused).
-     * @return Estimated amplitude (mV).
+     * @param window_ms Not currently used.
+     * @return Current membrane voltage (as proxy for amplitude).
      */
     double getSpikeAmplitude(int idx, double window_ms) const;
 
     /**
-     * @brief Set external input current for all neurons.
-     * @param current Input current (nA).
+     * @brief Set uniform external input current to all neurons.
+     * @param current Input current in nA.
      */
     void setInputCurrent(double current);
 
     /**
-     * @brief Set a neuron to track (for visualization).
+     * @brief Select a neuron for external tracking (e.g., in trace views).
      * @param index Neuron index.
      */
     void setSelectedNeuron(int index);
@@ -111,7 +117,7 @@ private:
     double globalInputCurrent_ = 0.0;
     int selectedNeuronIndex_ = -1;
 
-    /** @brief Convert grid coordinates to flat index. */
+    /** @brief Convert 2D grid coordinates to a flat array index. */
     int index(int x, int y) const { return y * nx_ + x; }
 };
 

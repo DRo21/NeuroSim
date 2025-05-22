@@ -33,13 +33,10 @@ add_library(neuro_core
     src/Simulation.cpp
 )
 
-# Ensure position independent code for linking into shared libraries
 set_target_properties(neuro_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-# Public include directories for any consumer
 target_include_directories(neuro_core
-    PUBLIC
-        ${PROJECT_SOURCE_DIR}/src
+    PUBLIC ${PROJECT_SOURCE_DIR}/src
 )
 
 # -------------------------
@@ -54,8 +51,7 @@ add_library(neuro_gui
 )
 
 target_include_directories(neuro_gui
-    PUBLIC
-        ${PROJECT_SOURCE_DIR}/src
+    PUBLIC ${PROJECT_SOURCE_DIR}/src
 )
 
 target_link_libraries(neuro_gui
@@ -85,13 +81,11 @@ pybind11_add_module(neurosim
 )
 
 target_include_directories(neurosim
-    PRIVATE
-        ${PROJECT_SOURCE_DIR}/src
+    PRIVATE ${PROJECT_SOURCE_DIR}/src
 )
 
 target_link_libraries(neurosim
-    PRIVATE
-        neuro_core
+    PRIVATE neuro_core
 )
 
 # -------------------------
@@ -119,8 +113,6 @@ catch_discover_tests(NeuroSimTests)
 # -------------------------
 # Unit Testing (QtTest)
 # -------------------------
-enable_testing()
-
 set(QT_GUI_TEST_FILES
     test_controlpanelwidget
     test_heatmapwidget

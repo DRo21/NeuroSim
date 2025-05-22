@@ -1,3 +1,9 @@
+/**
+ * @file HeatmapWidget.h
+ * @brief Defines the HeatmapWidget for visualizing neuron values in a grid.
+ * @author Dario Romandini
+ */
+
 #ifndef HEATMAPWIDGET_H
 #define HEATMAPWIDGET_H
 
@@ -5,11 +11,13 @@
 #include "Simulation.h"
 
 /**
- * @brief Widget displaying a 2D heatmap of neuron values.
+ * @class HeatmapWidget
+ * @brief Widget displaying a 2D heatmap of neuron values (voltage, spike rate, amplitude).
  */
 class HeatmapWidget : public QWidget
 {
     Q_OBJECT
+
 public:
     enum DisplayMode { Voltage = 0, SpikeRate, Amplitude };
 

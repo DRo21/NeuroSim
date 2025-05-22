@@ -1,3 +1,9 @@
+/**
+ * @file VoltageTraceRenderer.h
+ * @brief Voltage trace renderer implementation for NeuroSim using QPainter lines.
+ * @author Dario Romandini
+ */
+
 #pragma once
 
 #include "ITraceRenderer.h"
@@ -8,42 +14,45 @@
  * @class VoltageTraceRenderer
  * @brief Implements a scrolling voltage trace renderer.
  *
- * Stores recent voltage samples in a circular buffer and renders them as a continuous line.
+ * Stores recent voltage samples in a circular buffer and renders them as a polyline.
+ * Can be embedded in visualization widgets like OpenGLWidget.
  */
 class VoltageTraceRenderer : public ITraceRenderer {
 public:
     /**
      * @brief Constructor.
-     * @param maxSamples Maximum number of samples to retain for drawing.
-     * @param minV Minimum voltage value (used for normalization).
-     * @param maxV Maximum voltage value (used for normalization).
-     * @param color Color of the voltage trace.
+     * @param maxSamples Maximum number of samples to retain.
+     * @param minV Minimum voltage (used for normalization).
+     * @param maxV Maximum voltage (used for normalization).
+     * @param color Color used to draw the trace line.
      */
-    VoltageTraceRenderer(int maxSamples = 500, float minV = -80.0f, float maxV = 50.0f, QColor color = Qt::green);
+    VoltageTraceRenderer(int maxSamples = 500,
+                         float minV = -80.0f,
+                         float maxV = 50.0f,
+                         QColor color = Qt::green);
 
     /**
-     * @brief Adds a voltage sample to the trace.
-     * @param value The new voltage value to add.
+     * @brief Adds a new voltage sample to the buffer.
+     * @param voltage Voltage value to add.
      */
-    void addSample(float value) override;
+    void addSample(float voltage);
 
     /**
      * @brief Clears all stored samples.
      */
-    void clear() override;
+    void clear();
 
     /**
-     * @brief Renders the voltage trace using the given painter.
-     * @param painter QPainter context to draw into.
-     * @param width Width of the drawing area in pixels.
-     * @param height Height of the drawing area in pixels.
+     * @brief Renders the voltage trace into the provided rectangle.
+     * @param painter QPainter context to draw with.
+     * @param bounds Drawing bounds.
      */
-    void render(QPainter* painter, int width, int height) override;
+    void render(QPainter& painter, const QRect& bounds) override;
 
 private:
-    std::deque<float> voltageSamples; ///< Circular buffer of voltage values.
-    int maxSamples;                   ///< Maximum number of samples retained.
-    float minVoltage;                 ///< Minimum expected voltage (for normalization).
-    float maxVoltage;                 ///< Maximum expected voltage (for normalization).
-    QColor traceColor;                ///< Color used for the trace line.
+    std::deque<float> voltageSamples; ///< Circular buffer of voltage samples.
+    int maxSamples;                   ///< Maximum buffer size.
+    float minVoltage;                 ///< Voltage range minimum for scaling.
+    float maxVoltage;                 ///< Voltage range maximum for scaling.
+    QColor traceColor;                ///< Color of the polyline trace.
 };

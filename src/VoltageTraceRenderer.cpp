@@ -1,56 +1,50 @@
+/**
+ * @file VoltageTraceRenderer.cpp
+ * @brief Implements VoltageTraceRenderer logic for visualizing voltage traces in NeuroSim.
+ * @author Dario Romandini
+ */
+
 #include "VoltageTraceRenderer.h"
 #include <QPainter>
 #include <algorithm>
 
-/**
- * @brief Constructs the VoltageTraceRenderer.
- */
 VoltageTraceRenderer::VoltageTraceRenderer(int maxSamples, float minV, float maxV, QColor color)
-    : maxSamples(maxSamples), minVoltage(minV), maxVoltage(maxV), traceColor(color) {
+    : maxSamples(maxSamples), minVoltage(minV), maxVoltage(maxV), traceColor(color)
+{
     voltageSamples.clear();
 }
 
-/**
- * @brief Adds a new voltage value to the circular buffer.
- */
-void VoltageTraceRenderer::addSample(float value) {
+void VoltageTraceRenderer::addSample(float voltage)
+{
     if (voltageSamples.size() >= static_cast<size_t>(maxSamples)) {
         voltageSamples.pop_front();
     }
-    voltageSamples.push_back(value);
+    voltageSamples.push_back(voltage);
 }
 
-/**
- * @brief Clears all stored voltage samples.
- */
-void VoltageTraceRenderer::clear() {
+void VoltageTraceRenderer::clear()
+{
     voltageSamples.clear();
 }
 
-/**
- * @brief Renders the voltage trace as a green polyline on the given painter.
- */
-void VoltageTraceRenderer::render(QPainter* painter, int width, int height) {
+void VoltageTraceRenderer::render(QPainter& painter, const QRect& bounds)
+{
     if (voltageSamples.empty()) return;
 
-    painter->save();
-    painter->setRenderHint(QPainter::Antialiasing);
-    painter->setPen(traceColor);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setPen(traceColor);
 
-    const int sampleCount = static_cast<int>(voltageSamples.size());
-    float xStep = static_cast<float>(width) / (maxSamples - 1);
+    int w = bounds.width();
+    int h = bounds.height();
+    float xStep = static_cast<float>(w) / (maxSamples - 1);
 
-    float firstNorm = (voltageSamples.front() - minVoltage) / (maxVoltage - minVoltage);
-    firstNorm = std::clamp(firstNorm, 0.0f, 1.0f);
-    QPointF lastPoint(0.0f, height - firstNorm * height);
+    float firstNorm = std::clamp((voltageSamples.front() - minVoltage) / (maxVoltage - minVoltage), 0.0f, 1.0f);
+    QPointF lastPoint(0.0f, h - firstNorm * h);
 
-    for (int i = 1; i < sampleCount; ++i) {
-        float norm = (voltageSamples[i] - minVoltage) / (maxVoltage - minVoltage);
-        norm = std::clamp(norm, 0.0f, 1.0f);
-        QPointF currentPoint(i * xStep, height - norm * height);
-        painter->drawLine(lastPoint, currentPoint);
+    for (size_t i = 1; i < voltageSamples.size(); ++i) {
+        float norm = std::clamp((voltageSamples[i] - minVoltage) / (maxVoltage - minVoltage), 0.0f, 1.0f);
+        QPointF currentPoint(i * xStep, h - norm * h);
+        painter.drawLine(lastPoint, currentPoint);
         lastPoint = currentPoint;
     }
-
-    painter->restore();
 }
