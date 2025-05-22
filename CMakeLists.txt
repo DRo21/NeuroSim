@@ -16,6 +16,7 @@ set(CMAKE_AUTOUIC ON)
 find_package(Qt6 REQUIRED COMPONENTS
     Widgets
     OpenGLWidgets
+    Test
 )
 
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
@@ -92,6 +93,53 @@ target_link_libraries(neurosim
     PRIVATE
         neuro_core
 )
+
+# -------------------------
+# Unit Testing (Catch2)
+# -------------------------
+add_subdirectory(extern/Catch2)
+enable_testing()
+
+add_executable(NeuroSimTests
+    tests/test_neuron.cpp
+    tests/test_simulation.cpp
+    tests/test_synapse.cpp
+)
+
+target_link_libraries(NeuroSimTests
+    PRIVATE
+        neuro_core
+        Catch2::Catch2WithMain
+)
+
+include(CTest)
+include(Catch)
+catch_discover_tests(NeuroSimTests)
+
+# -------------------------
+# Unit Testing (QtTest)
+# -------------------------
+enable_testing()
+
+set(QT_GUI_TEST_FILES
+    test_controlpanelwidget
+    test_heatmapwidget
+    test_rasterplotwidget
+    test_traceviewwidget
+    test_mainwindow
+)
+
+foreach(test_file IN LISTS QT_GUI_TEST_FILES)
+    add_executable(${test_file} tests/${test_file}.cpp)
+    target_link_libraries(${test_file}
+        PRIVATE
+            Qt6::Test
+            Qt6::Widgets
+            Qt6::OpenGLWidgets
+            neuro_gui
+    )
+    add_test(NAME ${test_file} COMMAND ${test_file})
+endforeach()
 
 # -------------------------
 # Doxygen Documentation

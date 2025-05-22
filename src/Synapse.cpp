@@ -27,3 +27,7 @@ double Synapse::weight() const
 {
     return weight_;
 }
+
+void Synapse::setWeight(double w) {
+    weight_ = w;
+}

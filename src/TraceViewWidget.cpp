@@ -26,11 +26,15 @@ void TraceViewWidget::setNeuronIndex(int idx)
     updateView();
 }
 
+int TraceViewWidget::neuronIndex() const
+{
+    return neuronIndex_;
+}
+
 void TraceViewWidget::updateView()
 {
     if (!simulation_) return;
 
-    // Sample current voltage for each neuron and append to buffer
     int N = simulation_->neuronCount();
     for (int i = 0; i < N; ++i) {
         double v = simulation_->getNeuron(i)->getVoltage();
@@ -41,7 +45,6 @@ void TraceViewWidget::updateView()
         }
     }
 
-    // Trigger repaint unless frozen
     if (!freeze_) {
         repaint();
     }
@@ -71,7 +74,7 @@ void TraceViewWidget::drawTraces(QPainter& p)
 
         QPainterPath path;
         for (int i = 0; i < static_cast<int>(buf.size()); ++i) {
-            double x = (static_cast<double>(i) / (maxBufferSize_-1)) * w;
+            double x = (static_cast<double>(i) / (maxBufferSize_ - 1)) * w;
             double normV = (buf[i] + 80.0) / 100.0;
             double y = (n + 1) * yStep - normV * yStep;
             if (i == 0) path.moveTo(x, y);
@@ -92,12 +95,12 @@ void TraceViewWidget::drawCursorInfo(QPainter& p)
     int neuron = neuronIndex_;
     if (neuron < 0) {
         int total = simulation_->neuronCount();
-        neuron = std::clamp(int(cursorPos_.y() / double(height()) * total), 0, total-1);
+        neuron = std::clamp(int(cursorPos_.y() / double(height()) * total), 0, total - 1);
     }
 
     const auto& buf = voltageBuffers_[neuron];
     if (buf.empty()) return;
-    int sampleIdx = std::clamp(int(tFraction * (buf.size()-1)), 0, int(buf.size()-1));
+    int sampleIdx = std::clamp(int(tFraction * (buf.size() - 1)), 0, int(buf.size() - 1));
     double v = buf[sampleIdx];
 
     QString info = QString("t=%1 ms, n=%2, V=%3 mV")

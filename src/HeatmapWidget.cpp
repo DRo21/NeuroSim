@@ -29,9 +29,14 @@ void HeatmapWidget::setDisplayMode(DisplayMode mode)
     updateView();
 }
 
+HeatmapWidget::DisplayMode HeatmapWidget::displayMode() const
+{
+    return mode_;
+}
+
 void HeatmapWidget::updateView()
 {
-    update(); // Repaint trigger
+    update();
 }
 
 void HeatmapWidget::paintEvent(QPaintEvent*)

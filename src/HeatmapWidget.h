@@ -16,6 +16,7 @@ public:
     explicit HeatmapWidget(QWidget* parent = nullptr);
     void setSimulation(Simulation* sim);
     void setDisplayMode(DisplayMode mode);
+    DisplayMode displayMode() const;
     void updateView();
 
 protected:

@@ -43,6 +43,14 @@ public:
     /** @return Synaptic weight (nA). */
     double weight() const;
 
+    /** @brief Set synaptic weight. */
+    void setWeight(double w);
+
+    // Synonym methods for compatibility with tests
+    double getWeight() const { return weight(); }
+    int getSourceIndex() const { return src(); }
+    int getTargetIndex() const { return dst(); }
+
 private:
     int    src_;     ///< Source neuron index
     int    dst_;     ///< Destination neuron index

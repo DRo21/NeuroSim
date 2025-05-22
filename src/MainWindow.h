@@ -23,9 +23,11 @@ public:
     explicit MainWindow(QWidget* parent = nullptr);
     ~MainWindow() override;
 
-private slots:
+public slots:
     void onStartSimulation();
     void onStopSimulation();
+
+private slots:
     void onGridSizeChanged(int nx, int ny);
     void onInputCurrentChanged(double current);
     void onDisplayModeChanged(int modeIndex);

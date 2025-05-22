@@ -21,6 +21,7 @@ public:
     void setSimulation(Simulation* sim);
     void setNeuronIndex(int idx);
     void updateView();
+    int neuronIndex() const;
 
 protected:
     void paintEvent(QPaintEvent* ev) override;
